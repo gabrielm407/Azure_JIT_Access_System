@@ -60,3 +60,15 @@ variable "ARM_CLIENT_ID" {
   description = "The client ID for the Azure service principal"
   type        = string
 }
+
+variable "sql_admin_username" {
+  description = "The SQL Server administrator username"
+  type        = string
+  sensitive   = true
+}
+
+variable "sql_admin_password" {
+  description = "The SQL Server administrator password"
+  type        = string
+  sensitive   = true
+}
