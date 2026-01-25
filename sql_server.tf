@@ -1,14 +1,13 @@
 # Azure SQL Server with Public Network Access disabled
 resource "azurerm_mssql_server" "sql_server" {
-  name                         = "sqlserver-${lower(replace(var.resource_group_name, "-", ""))}-${formatdate("MMdd", timestamp())}"
-  resource_group_name          = azurerm_resource_group.rg.name
-  location                     = azurerm_resource_group.rg.location
+  name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}-${formatdate("MMdd", timestamp())}"
+  resource_group_name          = module.resource_group[local.default_environment].name
+  location                     = module.resource_group[local.default_environment].location
+  tags                         = module.resource_group[local.default_environment].tags
   version                      = "12.0"
   administrator_login          = var.sql_admin_username
   administrator_login_password = var.sql_admin_password
   public_network_access_enabled = false
-
-  tags = azurerm_resource_group.rg.tags
 }
 
 # Azure SQL Database
@@ -20,14 +19,14 @@ resource "azurerm_mssql_database" "sql_database" {
   sku_name       = "S0"
   zone_redundant = false
 
-  tags = azurerm_resource_group.rg.tags
+  tags = module.resource_group[local.default_environment].tags
 }
 
 # Private Endpoint for SQL Server (required since public network access is disabled)
 resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${azurerm_mssql_server.sql_server.name}-private-endpoint"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = module.resource_group[local.default_environment].name
+  location            = module.resource_group[local.default_environment].location
   subnet_id           = azurerm_subnet.subnet.id
 
   private_service_connection {
@@ -37,21 +36,21 @@ resource "azurerm_private_endpoint" "sql_private_endpoint" {
     is_manual_connection           = false
   }
 
-  tags = azurerm_resource_group.rg.tags
+  tags = module.resource_group[local.default_environment].tags
 }
 
 # Private DNS Zone for SQL Server
 resource "azurerm_private_dns_zone" "sql_dns" {
   name                = "privatelink.database.windows.net"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = module.resource_group[local.default_environment].name
 
-  tags = azurerm_resource_group.rg.tags
+  tags = module.resource_group[local.default_environment].tags
 }
 
 # Private DNS Zone Virtual Network Link
 resource "azurerm_private_dns_zone_virtual_network_link" "sql_vnet_link" {
   name                  = "${azurerm_mssql_server.sql_server.name}-vnet-link"
-  resource_group_name   = azurerm_resource_group.rg.name
+  resource_group_name   = module.resource_group[local.default_environment].name
   private_dns_zone_name = azurerm_private_dns_zone.sql_dns.name
   virtual_network_id    = azurerm_virtual_network.vnet.id
 }
@@ -60,7 +59,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "sql_vnet_link" {
 resource "azurerm_private_dns_a_record" "sql_dns_record" {
   name                = azurerm_mssql_server.sql_server.name
   zone_name           = azurerm_private_dns_zone.sql_dns.name
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = module.resource_group[local.default_environment].name
   ttl                 = 300
   records             = [azurerm_private_endpoint.sql_private_endpoint.private_service_connection[0].private_ip_address]
 }
