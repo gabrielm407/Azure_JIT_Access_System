@@ -1,6 +1,5 @@
 # ============================================================================
 # Azure SQL Server with Security and Encryption Configuration
-# ============================================================================
 # Azure SQL Server with Public Network Access disabled
 resource "azurerm_mssql_server" "sql_server" {
   name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}-${formatdate("MMdd", timestamp())}"
@@ -72,18 +71,14 @@ resource "azurerm_private_dns_a_record" "sql_dns_record" {
   records             = [azurerm_private_endpoint.sql_private_endpoint.private_service_connection[0].private_ip_address]
 }
 
-# ============================================================================
 # Transparent Data Encryption (TDE) Configuration
-# ============================================================================
 # Enable TDE with service-managed key (default)
 resource "azurerm_mssql_server_transparent_data_encryption" "sql_tde" {
   server_id            = azurerm_mssql_server.sql_server.id
   auto_rotation_enabled = true
 }
 
-# ============================================================================
 # Advanced Data Security Configuration
-# ============================================================================
 resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
   server_id              = azurerm_mssql_server.sql_server.id
   enabled                = true
@@ -92,9 +87,7 @@ resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
   depends_on = [azurerm_mssql_server_transparent_data_encryption.sql_tde]
 }
 
-# ============================================================================
 # Vulnerability Assessment Configuration
-# ============================================================================
 resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
   server_security_alert_policy_id = azurerm_mssql_server_extended_auditing_policy.sql_security_alerts.id
   

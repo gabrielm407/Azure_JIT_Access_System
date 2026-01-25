@@ -35,9 +35,8 @@
 #   depends_on = [module.virtual_network] # This isn't required since Terraform is smart enough to figure it out since it references the virtual network module on line 21 and knows that module must be created first
 # }
 
-# ============================================================================
 # Storage Account for SQL Auditing and Vulnerability Assessment
-# ============================================================================
+
 resource "azurerm_storage_account" "sql_audit_storage" {
   name                     = "sqlaudit${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}${formatdate("MMdd", timestamp())}"
   resource_group_name      = module.resource_group[local.default_environment].name

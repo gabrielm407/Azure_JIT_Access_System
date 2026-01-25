@@ -1,6 +1,5 @@
 # ============================================================================
 # Key Vault for Customer-Managed Keys (CMK) Encryption
-# ============================================================================
 resource "azurerm_key_vault" "sql_cmk_vault" {
   name                = "sqlcmk${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
   location            = module.resource_group[local.default_environment].location
@@ -28,9 +27,7 @@ resource "azurerm_key_vault" "sql_cmk_vault" {
   depends_on = [module.resource_group]
 }
 
-# ============================================================================
 # Key Vault Private Endpoint
-# ============================================================================
 resource "azurerm_private_endpoint" "keyvault_private_endpoint" {
   name                = "${azurerm_key_vault.sql_cmk_vault.name}-private-endpoint"
   location            = module.resource_group[local.default_environment].location
@@ -47,9 +44,7 @@ resource "azurerm_private_endpoint" "keyvault_private_endpoint" {
   tags = module.resource_group[local.default_environment].tags
 }
 
-# ============================================================================
 # Private DNS Zone for Key Vault
-# ============================================================================
 resource "azurerm_private_dns_zone" "keyvault_dns" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = module.resource_group[local.default_environment].name
@@ -64,9 +59,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "keyvault_vnet_link" {
   virtual_network_id    = module.virtual_network.id
 }
 
-# ============================================================================
 # Customer-Managed Key (CMK) for SQL Encryption
-# ============================================================================
 resource "azurerm_key_vault_key" "sql_cmk_key" {
   count            = var.enable_cmk_encryption ? 1 : 0
   name             = "sql-tde-key"
@@ -86,9 +79,7 @@ resource "azurerm_key_vault_key" "sql_cmk_key" {
   depends_on = [azurerm_key_vault.sql_cmk_vault]
 }
 
-# ============================================================================
 # Key Vault Access Policy for SQL Server
-# ============================================================================
 resource "azurerm_key_vault_access_policy" "sql_server_policy" {
   count            = var.enable_cmk_encryption ? 1 : 0
   key_vault_id     = azurerm_key_vault.sql_cmk_vault.id
@@ -115,9 +106,7 @@ resource "azurerm_key_vault_access_policy" "sql_server_policy" {
   ]
 }
 
-# ============================================================================
 # Role Assignment for SQL Server to access Key Vault
-# ============================================================================
 resource "azurerm_role_assignment" "sql_keyvault_access" {
   count              = var.enable_cmk_encryption ? 1 : 0
   scope              = azurerm_key_vault.sql_cmk_vault.id
@@ -130,7 +119,5 @@ resource "azurerm_role_assignment" "sql_keyvault_access" {
   ]
 }
 
-# ============================================================================
 # Data Source: Current Azure Context
-# ============================================================================
 data "azurerm_client_config" "current" {}

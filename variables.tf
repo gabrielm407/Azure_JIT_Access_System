@@ -73,10 +73,6 @@ variable "sql_admin_password" {
   sensitive   = true
 }
 
-# ============================================================================
-# Encryption and Compliance Variables
-# ============================================================================
-
 variable "enable_cmk_encryption" {
   description = "Enable Customer-Managed Key (CMK) encryption for SQL Server TDE"
   type        = bool

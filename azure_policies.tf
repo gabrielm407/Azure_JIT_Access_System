@@ -1,8 +1,6 @@
 # Azure Policy Definitions and Assignments for Compliance
 
-# ============================================================================
 # Policy Assignment: Ensure Transparent Data Encryption (TDE) is enabled
-# ============================================================================
 resource "azurerm_subscription_policy_assignment" "sql_tde_enabled" {
   name              = "enforce-sql-tde-enabled"
   subscription_id   = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
@@ -15,9 +13,7 @@ resource "azurerm_subscription_policy_assignment" "sql_tde_enabled" {
   not_scopes = []
 }
 
-# ============================================================================
 # Policy Assignment: Ensure server-side encryption is enabled for storage
-# ============================================================================
 resource "azurerm_subscription_policy_assignment" "sql_encryption_at_rest" {
   name              = "enforce-sql-encryption-at-rest"
   subscription_id   = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
@@ -29,9 +25,7 @@ resource "azurerm_subscription_policy_assignment" "sql_encryption_at_rest" {
   not_scopes = []
 }
 
-# ============================================================================
 # Policy Assignment: Ensure that SQL servers use Customer-Managed Keys (CMK)
-# ============================================================================
 resource "azurerm_subscription_policy_assignment" "sql_cmk_encryption" {
   name              = "enforce-sql-cmk-encryption"
   subscription_id   = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
@@ -43,9 +37,7 @@ resource "azurerm_subscription_policy_assignment" "sql_cmk_encryption" {
   not_scopes = []
 }
 
-# ============================================================================
 # Policy Assignment: Ensure SQL databases have encryption enabled
-# ============================================================================
 resource "azurerm_subscription_policy_assignment" "sql_db_encryption" {
   name              = "enforce-sql-db-encryption"
   subscription_id   = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
@@ -57,9 +49,7 @@ resource "azurerm_subscription_policy_assignment" "sql_db_encryption" {
   not_scopes = []
 }
 
-# ============================================================================
 # Policy Assignment: Ensure Azure SQL Server Firewall Rules Block All Access
-# ============================================================================
 resource "azurerm_subscription_policy_assignment" "sql_firewall_rules" {
   name              = "enforce-sql-firewall-restrictions"
   subscription_id   = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
@@ -71,9 +61,7 @@ resource "azurerm_subscription_policy_assignment" "sql_firewall_rules" {
   not_scopes = []
 }
 
-# ============================================================================
 # Policy Assignment: SQL Encryption Compliance Initiative
-# ============================================================================
 resource "azurerm_subscription_policy_assignment" "sql_encryption_initiative" {
   name                = "sql-encryption-compliance-initiative"
   subscription_id     = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
