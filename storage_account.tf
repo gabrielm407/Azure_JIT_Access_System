@@ -34,3 +34,48 @@
 
 #   depends_on = [module.virtual_network] # This isn't required since Terraform is smart enough to figure it out since it references the virtual network module on line 21 and knows that module must be created first
 # }
+
+# Storage Account for SQL Auditing and Vulnerability Assessment
+
+resource "azurerm_storage_account" "sql_audit_storage" {
+  name                     = "sqlaudit${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}${formatdate("MMdd", timestamp())}"
+  resource_group_name      = module.resource_group[local.default_environment].name
+  location                 = module.resource_group[local.default_environment].location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  
+  # Enable encryption at rest
+  https_traffic_only_enabled = true
+  min_tls_version            = "TLS1_2"
+
+  # Network rules for enhanced security
+  public_network_access_enabled = false
+  shared_access_key_enabled     = true
+
+  tags = {
+    purpose       = "sql-audit-and-vulnerability-assessment"
+    encryption    = "enabled"
+    compliance    = "required"
+    environment   = local.default_environment
+  }
+
+  depends_on = [module.resource_group]
+}
+
+# Blob container for SQL audit logs
+resource "azurerm_storage_container" "sql_audit_logs" {
+  name                  = "sql-audit-logs"
+  storage_account_name  = azurerm_storage_account.sql_audit_storage.name
+  container_access_type = "private"
+
+  depends_on = [azurerm_storage_account.sql_audit_storage]
+}
+
+# Blob container for vulnerability assessments
+resource "azurerm_storage_container" "vulnerability_assessments" {
+  name                  = "vulnerability-assessments"
+  storage_account_name  = azurerm_storage_account.sql_audit_storage.name
+  container_access_type = "private"
+
+  depends_on = [azurerm_storage_account.sql_audit_storage]
+}

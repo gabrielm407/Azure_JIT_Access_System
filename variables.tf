@@ -60,3 +60,60 @@ variable "ARM_CLIENT_ID" {
   description = "The client ID for the Azure service principal"
   type        = string
 }
+
+variable "sql_admin_username" {
+  description = "The SQL Server administrator username"
+  type        = string
+  sensitive   = true
+}
+
+variable "sql_admin_password" {
+  description = "The SQL Server administrator password"
+  type        = string
+  sensitive   = true
+}
+
+variable "enable_cmk_encryption" {
+  description = "Enable Customer-Managed Key (CMK) encryption for SQL Server TDE"
+  type        = bool
+  default     = false
+}
+
+variable "sql_audit_retention_days" {
+  description = "Number of days to retain SQL audit logs"
+  type        = number
+  default     = 30
+  validation {
+    condition     = var.sql_audit_retention_days >= 0 && var.sql_audit_retention_days <= 3650
+    error_message = "Audit retention days must be between 0 and 3650."
+  }
+}
+
+variable "enable_vulnerability_assessment" {
+  description = "Enable SQL Server Vulnerability Assessment scans"
+  type        = bool
+  default     = true
+}
+
+variable "enable_security_alerts" {
+  description = "Enable SQL Server Advanced Data Security alerts"
+  type        = bool
+  default     = true
+}
+
+variable "enable_auditing" {
+  description = "Enable SQL Server auditing"
+  type        = bool
+  default     = true
+}
+
+variable "compliance_tags" {
+  description = "Tags for compliance and auditing purposes"
+  type        = map(string)
+  default = {
+    compliance_framework = "Azure Policy"
+    encryption_enabled   = "true"
+    tde_enabled          = "true"
+    audit_enabled        = "true"
+  }
+}
