@@ -1,3 +1,6 @@
+# ============================================================================
+# Azure SQL Server with Security and Encryption Configuration
+# ============================================================================
 # Azure SQL Server with Public Network Access disabled
 resource "azurerm_mssql_server" "sql_server" {
   name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}-${formatdate("MMdd", timestamp())}"
@@ -8,6 +11,11 @@ resource "azurerm_mssql_server" "sql_server" {
   administrator_login          = var.sql_admin_username
   administrator_login_password = var.sql_admin_password
   public_network_access_enabled = false
+
+  # Enable managed identity for use with Customer-Managed Keys (CMK)
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 # Azure SQL Database
@@ -64,7 +72,39 @@ resource "azurerm_private_dns_a_record" "sql_dns_record" {
   records             = [azurerm_private_endpoint.sql_private_endpoint.private_service_connection[0].private_ip_address]
 }
 
-# Deny public network access (additional security measure)
+# ============================================================================
+# Transparent Data Encryption (TDE) Configuration
+# ============================================================================
+# Enable TDE with service-managed key (default)
 resource "azurerm_mssql_server_transparent_data_encryption" "sql_tde" {
-  server_id = azurerm_mssql_server.sql_server.id
+  server_id            = azurerm_mssql_server.sql_server.id
+  auto_rotation_enabled = true
+}
+
+# ============================================================================
+# Advanced Data Security Configuration
+# ============================================================================
+resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
+  server_id              = azurerm_mssql_server.sql_server.id
+  enabled                = true
+  retention_in_days      = 30
+
+  depends_on = [azurerm_mssql_server_transparent_data_encryption.sql_tde]
+}
+
+# ============================================================================
+# Vulnerability Assessment Configuration
+# ============================================================================
+resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
+  server_security_alert_policy_id = azurerm_mssql_server_extended_auditing_policy.sql_security_alerts.id
+  
+  storage_container_path                = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
+  storage_container_sas_key             = azurerm_storage_account.sql_audit_storage.primary_access_key
+  
+  recurring_scans {
+    enabled                   = true
+    email_subscription_admins = true
+  }
+
+  depends_on = [azurerm_mssql_server.sql_server, azurerm_storage_account.sql_audit_storage]
 }
