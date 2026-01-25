@@ -27,7 +27,7 @@ resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${azurerm_mssql_server.sql_server.name}-private-endpoint"
   resource_group_name = module.resource_group[local.default_environment].name
   location            = module.resource_group[local.default_environment].location
-  subnet_id           = azurerm_subnet.subnet.id
+  subnet_id           = module.virtual_network.subnet_id
 
   private_service_connection {
     name                           = "${azurerm_mssql_server.sql_server.name}-psc"
@@ -52,10 +52,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "sql_vnet_link" {
   name                  = "${azurerm_mssql_server.sql_server.name}-vnet-link"
   resource_group_name   = module.resource_group[local.default_environment].name
   private_dns_zone_name = azurerm_private_dns_zone.sql_dns.name
-  virtual_network_id    = azurerm_virtual_network.vnet.id
+  virtual_network_id    = module.virtual_network.id
 }
 
-# DNS A Record for SQL Server
+# DNS A Record for SQL Server`
 resource "azurerm_private_dns_a_record" "sql_dns_record" {
   name                = azurerm_mssql_server.sql_server.name
   zone_name           = azurerm_private_dns_zone.sql_dns.name
