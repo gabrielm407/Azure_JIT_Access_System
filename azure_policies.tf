@@ -5,7 +5,6 @@ data "azurerm_policy_definition" "tde_enabled" {
 }
 
 # Built-in Policy: CMK for SQL Managed Instances
-# NOTE: Your original GUID (7698e800...) points to SQL Managed Instances, not Storage.
 data "azurerm_policy_definition" "sql_mi_cmk" {
   display_name = "SQL managed instances should use customer-managed keys to encrypt data at rest"
 }
