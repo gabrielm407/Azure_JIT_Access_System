@@ -54,7 +54,7 @@ resource "azurerm_storage_account" "sql_audit_storage" {
 
   network_rules {
     default_action = "Deny"
-    ip_rules       = ["0.0.0.0/0"] # This allows all traffic, so it better to be only your public IP address
+    ip_rules       = ["0.0.0.0/0"] # This allows all traffic, but it is better to be only your public IP address
     bypass         = ["AzureServices"] # Optional: often needed for metrics/logging
   }
 
