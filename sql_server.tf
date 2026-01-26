@@ -90,14 +90,17 @@ resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
 # Vulnerability Assessment Configuration
 resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
   server_security_alert_policy_id = azurerm_mssql_server_extended_auditing_policy.sql_security_alerts.id
-  
-  storage_container_path                = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
-  storage_container_sas_key             = azurerm_storage_account.sql_audit_storage.primary_access_key
+  storage_container_path          = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
+  storage_container_sas_key       = azurerm_storage_account.sql_audit_storage.primary_access_key
   
   recurring_scans {
     enabled                   = true
     email_subscription_admins = true
   }
 
-  depends_on = [azurerm_mssql_server.sql_server, azurerm_storage_account.sql_audit_storage, azurerm_mssql_server_extended_auditing_policy.sql_security_alerts]
+  depends_on = [
+    azurerm_mssql_server.sql_server,
+    azurerm_storage_account.sql_audit_storage,
+    azurerm_mssql_server_extended_auditing_policy.sql_security_alerts
+  ]
 }
