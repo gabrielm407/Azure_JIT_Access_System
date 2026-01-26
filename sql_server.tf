@@ -2,7 +2,7 @@
 # Azure SQL Server with Security and Encryption Configuration
 # Azure SQL Server with Public Network Access disabled
 resource "azurerm_mssql_server" "sql_server" {
-  name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}-${formatdate("MMdd", timestamp())}"
+  name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}-${formatdate("0102", timestamp())}"
   resource_group_name          = module.resource_group[local.default_environment].name
   location                     = module.resource_group[local.default_environment].location
   tags                         = module.resource_group[local.default_environment].tags
