@@ -4,7 +4,7 @@
 resource "azurerm_mssql_server" "sql_server" {
   name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
   resource_group_name          = module.resource_group[local.default_environment].name
-  location                     = module.resource_group[local.default_environment].location
+  location                     = "East US 2"
   tags                         = module.resource_group[local.default_environment].tags
   version                      = "12.0"
   administrator_login          = var.sql_admin_username
@@ -33,7 +33,7 @@ resource "azurerm_mssql_database" "sql_database" {
 resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${azurerm_mssql_server.sql_server.name}-private-endpoint"
   resource_group_name = module.resource_group[local.default_environment].name
-  location            = module.resource_group[local.default_environment].location
+  location            = "East US 2"
   subnet_id           = module.virtual_network.subnet_id
 
   private_service_connection {

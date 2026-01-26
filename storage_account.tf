@@ -59,7 +59,7 @@ resource "azurerm_storage_account" "sql_audit_storage" {
     environment   = local.default_environment
   }
 
-  depends_on = [module.resource_group]
+  depends_on = [module.resource_group, azurerm_role_assignment.storage_blob_data_contributor]
 }
 
 # Blob container for SQL audit logs
