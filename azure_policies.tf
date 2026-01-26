@@ -20,12 +20,6 @@ data "azurerm_policy_definition" "sql_public_access" {
   display_name = "Public network access on Azure SQL Database should be disabled"
 }
 
-# Built-in Initiative (Policy Set): SQL Encryption Compliance
-# Using the name (GUID) here is safer for Initiatives as display names can be very long/variable
-data "azurerm_policy_set_definition" "sql_initiative" {
-  name = "055aa869-bc98-4af8-baaf-86c8b6696289"
-}
-
 # POLICY ASSIGNMENTS
 # Policy Assignment: Ensure Transparent Data Encryption (TDE) is enabled
 resource "azurerm_subscription_policy_assignment" "sql_tde_enabled" {
@@ -69,14 +63,4 @@ resource "azurerm_subscription_policy_assignment" "sql_firewall_rules" {
   description          = "Ensure that 'Deny public network access' is set to 'True' for SQL Servers"
   display_name         = "SQL Server Public Network Access Must Be Denied"
   not_scopes           = []
-}
-
-# Policy Assignment: SQL Encryption Compliance Initiative
-resource "azurerm_subscription_policy_assignment" "sql_encryption_initiative" {
-  name                 = "sql-encryption-compliance-initiative"
-  subscription_id      = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
-  policy_definition_id = data.azurerm_policy_set_definition.sql_initiative.id
-  
-  description          = "This initiative ensures SQL servers meet minimum encryption and security standards"
-  display_name         = "SQL Server Encryption and Security Compliance Initiative"
 }
