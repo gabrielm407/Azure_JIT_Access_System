@@ -115,7 +115,7 @@ resource "azurerm_service_plan" "func_plan" {
   resource_group_name = module.resource_group[local.default_environment].name
   location            = "Canada Central"
   os_type             = "Linux" # Linux is preferred for .NET 8 / Python
-  sku_name            = "F1"    # Consumption (Serverless) tier
+  sku_name            = "Y1"    # Consumption (Serverless) tier
 }
 
 resource "azurerm_linux_function_app" "jit_function" {
