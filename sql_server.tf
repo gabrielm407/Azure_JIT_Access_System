@@ -98,9 +98,8 @@ resource "azurerm_mssql_server_security_alert_policy" "sql_security_alerts" {
 # 3. (Updated) Vulnerability Assessment
 resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
   server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.sql_security_alerts.id
-  
   storage_container_path          = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
-  storage_container_sas_key       = azurerm_storage_account.sql_audit_storage.primary_access_key
+  # storage_container_sas_key       = azurerm_storage_account.sql_audit_storage.primary_access_key
   
   recurring_scans {
     enabled                   = true
