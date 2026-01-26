@@ -115,7 +115,7 @@ resource "azurerm_service_plan" "func_plan" {
   resource_group_name = module.resource_group[local.default_environment].name
   location            = module.resource_group[local.default_environment].location
   os_type             = "Linux" # Linux is preferred for .NET 8 / Python
-  sku_name            = "B1"    # Consumption (Serverless) tier
+  sku_name            = "F1"    # Consumption (Serverless) tier
 }
 
 resource "azurerm_linux_function_app" "jit_function" {
@@ -132,7 +132,6 @@ resource "azurerm_linux_function_app" "jit_function" {
       dotnet_version = "8.0"
       use_dotnet_isolated_runtime = true
     }
-  always_on = true
   }
 
   identity {
