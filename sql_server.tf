@@ -110,6 +110,14 @@ resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_asse
   ]
 }
 
+resource "azurerm_storage_account" "func_storage" {
+  name                     = "stfunc${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
+  resource_group_name      = module.resource_group[local.default_environment].name
+  location                 = module.resource_group[local.default_environment].location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
 resource "azurerm_service_plan" "func_plan" {
   name                = "plan-jit-access"
   resource_group_name = module.resource_group[local.default_environment].name
@@ -123,8 +131,8 @@ resource "azurerm_linux_function_app" "jit_function" {
   resource_group_name = module.resource_group[local.default_environment].name
   location            = "Canada Central"
 
-  storage_account_name       = azurerm_storage_account.sql_audit_storage.name
-  storage_account_access_key = azurerm_storage_account.sql_audit_storage.primary_access_key
+  storage_account_name       = azurerm_storage_account.func_storage.name
+  storage_account_access_key = azurerm_storage_account.func_storage.primary_access_key
   service_plan_id            = azurerm_service_plan.func_plan.id
 
   site_config {
