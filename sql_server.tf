@@ -33,7 +33,7 @@ resource "azurerm_mssql_database" "sql_database" {
 resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${azurerm_mssql_server.sql_server.name}-private-endpoint"
   resource_group_name = module.resource_group[local.default_environment].name
-  location            = "East US 2"
+  location            = module.resource_group[local.default_environment].location
   subnet_id           = module.virtual_network.subnet_id
 
   private_service_connection {
@@ -99,5 +99,5 @@ resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_asse
     email_subscription_admins = true
   }
 
-  depends_on = [azurerm_mssql_server.sql_server, azurerm_storage_account.sql_audit_storage]
+  depends_on = [azurerm_mssql_server.sql_server, azurerm_storage_account.sql_audit_storage, azurerm_mssql_server_extended_auditing_policy.sql_security_alerts]
 }
