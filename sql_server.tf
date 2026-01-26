@@ -113,15 +113,15 @@ resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_asse
 resource "azurerm_service_plan" "func_plan" {
   name                = "plan-jit-access"
   resource_group_name = module.resource_group[local.default_environment].name
-  location            = "West US"
+  location            = module.resource_group[local.default_environment].location
   os_type             = "Linux" # Linux is preferred for .NET 8 / Python
-  sku_name            = "Y1"    # Consumption (Serverless) tier
+  sku_name            = "B1"    # Consumption (Serverless) tier
 }
 
 resource "azurerm_linux_function_app" "jit_function" {
   name                = "func-jit-access-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
   resource_group_name = module.resource_group[local.default_environment].name
-  location            = "West US"
+  location            = module.resource_group[local.default_environment].location
 
   storage_account_name       = azurerm_storage_account.sql_audit_storage.name
   storage_account_access_key = azurerm_storage_account.sql_audit_storage.primary_access_key
@@ -132,6 +132,7 @@ resource "azurerm_linux_function_app" "jit_function" {
       dotnet_version = "8.0"
       use_dotnet_isolated_runtime = true
     }
+  always_on = true
   }
 
   identity {
