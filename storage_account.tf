@@ -49,8 +49,14 @@ resource "azurerm_storage_account" "sql_audit_storage" {
   min_tls_version            = "TLS1_2"
 
   # Network rules for enhanced security
-  public_network_access_enabled = false
+  public_network_access_enabled = true
   shared_access_key_enabled     = true
+
+  network_rules {
+    default_action = "Deny"
+    ip_rules       = ["0.0.0.0/0"] # This allows all traffic, so it better to be only your public IP address
+    bypass         = ["AzureServices"] # Optional: often needed for metrics/logging
+  }
 
   tags = {
     purpose       = "sql-audit-and-vulnerability-assessment"
