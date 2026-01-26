@@ -29,7 +29,7 @@ resource "azurerm_mssql_database" "sql_database" {
   tags = module.resource_group[local.default_environment].tags
 }
 
-# Private Endpoint for SQL Server (required since public network access is disabled)
+# Private Endpoint for SQL Server
 resource "azurerm_private_endpoint" "sql_private_endpoint" {
   name                = "${azurerm_mssql_server.sql_server.name}-private-endpoint"
   resource_group_name = module.resource_group[local.default_environment].name
@@ -87,19 +87,17 @@ resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
   depends_on = [azurerm_mssql_server_transparent_data_encryption.sql_tde]
 }
 
-# Vulnerability Assessment Configuration
-# 2. (NEW) Security Alert Policy - This is what was missing
+# Security Alert Policy
 resource "azurerm_mssql_server_security_alert_policy" "sql_security_alerts" {
   resource_group_name = module.resource_group[local.default_environment].name
   server_name         = azurerm_mssql_server.sql_server.name
   state               = "Enabled"
 }
 
-# 3. (Updated) Vulnerability Assessment
+# Vulnerability Assessment
 resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
   server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.sql_security_alerts.id
   storage_container_path          = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
-  # storage_container_sas_key       = azurerm_storage_account.sql_audit_storage.primary_access_key
   
   recurring_scans {
     enabled                   = true
