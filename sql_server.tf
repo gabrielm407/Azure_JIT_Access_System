@@ -109,3 +109,39 @@ resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_asse
     azurerm_storage_account.sql_audit_storage
   ]
 }
+
+resource "azurerm_service_plan" "func_plan" {
+  name                = "plan-jit-access"
+  resource_group_name = module.resource_group[local.default_environment].name
+  location            = module.resource_group[local.default_environment].location
+  os_type             = "Linux" # Linux is preferred for .NET 8 / Python
+  sku_name            = "Y1"    # Consumption (Serverless) tier
+}
+
+resource "azurerm_linux_function_app" "jit_function" {
+  name                = "func-jit-access-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
+  resource_group_name = module.resource_group[local.default_environment].name
+  location            = module.resource_group[local.default_environment].location
+
+  storage_account_name       = azurerm_storage_account.sql_audit_storage.name
+  storage_account_access_key = azurerm_storage_account.sql_audit_storage.primary_access_key
+  service_plan_id            = azurerm_service_plan.func_plan.id
+
+  site_config {
+    application_stack {
+      dotnet_version = "8.0"
+      use_dotnet_isolated_runtime = true
+    }
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+  
+  # Inject the SQL Server name as an environment variable so the code doesn't need it hardcoded
+  app_settings = {
+    "SQL_SERVER_NAME"      = azurerm_mssql_server.sql_server.name
+    "SUBSCRIPTION_ID"      = data.azurerm_client_config.current.subscription_id
+    "RESOURCE_GROUP_NAME"  = module.resource_group[local.default_environment].name
+  }
+}
