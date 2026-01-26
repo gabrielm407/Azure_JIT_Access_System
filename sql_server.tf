@@ -88,8 +88,17 @@ resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
 }
 
 # Vulnerability Assessment Configuration
+# 2. (NEW) Security Alert Policy - This is what was missing
+resource "azurerm_mssql_server_security_alert_policy" "sql_security_alerts" {
+  resource_group_name = module.resource_group[local.default_environment].name
+  server_name         = azurerm_mssql_server.sql_server.name
+  state               = "Enabled"
+}
+
+# 3. (Updated) Vulnerability Assessment
 resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
-  server_security_alert_policy_id = azurerm_mssql_server_extended_auditing_policy.sql_security_alerts.id
+  server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.sql_security_alerts.id
+  
   storage_container_path          = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
   storage_container_sas_key       = azurerm_storage_account.sql_audit_storage.primary_access_key
   
@@ -99,8 +108,7 @@ resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_asse
   }
 
   depends_on = [
-    azurerm_mssql_server.sql_server,
-    azurerm_storage_account.sql_audit_storage,
-    azurerm_mssql_server_extended_auditing_policy.sql_security_alerts
+    azurerm_mssql_server_security_alert_policy.sql_security_alerts,
+    azurerm_storage_account.sql_audit_storage
   ]
 }
