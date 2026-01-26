@@ -38,7 +38,7 @@
 # Storage Account for SQL Auditing and Vulnerability Assessment
 
 resource "azurerm_storage_account" "sql_audit_storage" {
-  name                     = "sqlaudit${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
+  name                     = "sqlADT${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
   resource_group_name      = module.resource_group[local.default_environment].name
   location                 = module.resource_group[local.default_environment].location
   account_tier             = "Standard"
