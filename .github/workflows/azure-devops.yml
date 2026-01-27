@@ -14,58 +14,37 @@ env:
   AZURE_FUNCTIONAPP_NAME: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
   DOTNET_VERSION: '8.0.x' 
   WORKING_DIRECTORY: 'src' # Points to where you created the C# project
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Checkout Code
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
 
-    # 2. Setup .NET Environment
     - name: Setup Dotnet ${{ env.DOTNET_VERSION }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # 3. Restore Dependencies
     - name: 'Restore Dependencies'
       run: dotnet restore
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
-    # =========================================================
-    # THE IMPRESSIVE PART: "Shift-Left" Security Scan
-    # This checks your NuGet packages for known vulnerabilities.
-    # If a high-severity vul is found, the pipeline FAILS here.
-    # =========================================================
     - name: 'Security Audit (NuGet)'
       run: dotnet list package --vulnerable --include-transitive
       working-directory: ${{ env.WORKING_DIRECTORY }}
-      continue-on-error: true # Set to false to strictly block builds on vulns
+      continue-on-error: true
 
-    # ADD THIS STEP FOR DEBUGGING
-    - name: 'List Files in src'
-      run: ls -R src
-
-    # 4. Build the Application
-    - name: 'Build Project'
-      run: dotnet build --configuration Release --no-restore
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-    # 5. Publish to a Folder
     - name: 'Publish Project'
-      run: dotnet publish --configuration Release --no-build --output ./output
+      run: dotnet publish --configuration Release --output ./output
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
-    # 6. Login to Azure
     - name: 'Login via Azure CLI'
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # 7. Deploy to Azure Function
     - name: 'Run Azure Functions Action'
       uses: Azure/functions-action@v1
       with:
