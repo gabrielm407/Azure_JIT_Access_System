@@ -25,3 +25,5 @@ obj/
 *.user
 *.suo
 local.settings.json
+src/obj/
+src/bin/
