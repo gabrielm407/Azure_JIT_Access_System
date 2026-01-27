@@ -53,13 +53,13 @@ resource "azurerm_subscription_policy_assignment" "sql_cmk_encryption" {
   not_scopes           = []
 }
 
-# Policy Assignment: Ensure Azure SQL Server Firewall Rules Block All Access
-resource "azurerm_subscription_policy_assignment" "sql_firewall_rules" {
-  name                 = "enforce-sql-firewall-restrictions"
-  subscription_id      = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
-  policy_definition_id = data.azurerm_policy_definition.sql_public_access.id
+# # Policy Assignment: Ensure Azure SQL Server Firewall Rules Block All Access
+# resource "azurerm_subscription_policy_assignment" "sql_firewall_rules" {
+#   name                 = "enforce-sql-firewall-restrictions"
+#   subscription_id      = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
+#   policy_definition_id = data.azurerm_policy_definition.sql_public_access.id
   
-  description          = "Ensure that 'Deny public network access' is set to 'True' for SQL Servers"
-  display_name         = "SQL Server Public Network Access Must Be Denied"
-  not_scopes           = []
-}
+#   description          = "Ensure that 'Deny public network access' is set to 'True' for SQL Servers"
+#   display_name         = "SQL Server Public Network Access Must Be Denied"
+#   not_scopes           = []
+# }
