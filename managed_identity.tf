@@ -16,8 +16,8 @@ resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   principal_id         = azurerm_user_assigned_identity.user.principal_id
 }
 
-# resource "azurerm_role_assignment" "func_sql_security_manager" {
-#   scope                = azurerm_mssql_server.sql_server.id
-#   role_definition_name = "SQL Security Manager"
-#   principal_id         = azurerm_linux_function_app.jit_function.identity[0].principal_id
-# }
+resource "azurerm_role_assignment" "func_sql_security_manager" {
+  scope                = azurerm_mssql_server.sql_server.id
+  role_definition_name = "SQL Security Manager"
+  principal_id         = azurerm_linux_function_app.jit_function.identity[0].principal_id
+}
