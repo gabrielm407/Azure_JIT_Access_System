@@ -16,3 +16,12 @@ crash.log
 
 # Ignore Terraform lock file
 .terraform.lock.hcl
+
+# .gitignore
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+local.settings.json
