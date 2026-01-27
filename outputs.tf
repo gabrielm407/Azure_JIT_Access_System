@@ -103,7 +103,7 @@ output "azure_policy_assignments" {
     tde_enabled_policy     = azurerm_subscription_policy_assignment.sql_tde_enabled.name
     encryption_at_rest     = azurerm_subscription_policy_assignment.sql_encryption_at_rest.name
     cmk_encryption_policy  = azurerm_subscription_policy_assignment.sql_cmk_encryption.name
-    firewall_policy        = azurerm_subscription_policy_assignment.sql_firewall_rules.name
+    # firewall_policy        = azurerm_subscription_policy_assignment.sql_firewall_rules.name
   }
 }
 
