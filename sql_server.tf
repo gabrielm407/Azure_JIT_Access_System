@@ -140,6 +140,7 @@ resource "azurerm_linux_function_app" "jit_function" {
       dotnet_version = "8.0"
       use_dotnet_isolated_runtime = true
     }
+    always_on = false
   }
 
   identity {

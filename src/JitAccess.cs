@@ -9,70 +9,30 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 
-public class JitAccess
+// ADD THIS NAMESPACE LINE
+namespace JitAccessConfig
 {
-    private readonly ILogger _logger;
-
-    public JitAccess(ILoggerFactory loggerFactory)
+    public class JitAccess
     {
-        _logger = loggerFactory.CreateLogger<JitAccess>();
-    }
+        private readonly ILogger _logger;
 
-    [Function("RequestAccess")]
-    public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequestData req)
-    {
-        _logger.LogInformation("Processing JIT Access Request.");
-
-        // 1. Parse Request
-        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        var data = JsonSerializer.Deserialize<JsonElement>(requestBody);
-        
-        // In a real scenario, you'd validate the user via Entra ID headers here.
-        // For this demo, we trust the IP sent (or extract it from headers).
-        string clientIp = data.TryGetProperty("ip", out var ipVal) ? ipVal.ToString() : "127.0.0.1";
-        string userEmail = data.TryGetProperty("email", out var emailVal) ? emailVal.ToString() : "unknown_user";
-
-        // 2. Define Rule Name (JIT_UserHash_Ticks)
-        var expiration = DateTime.UtcNow.AddHours(1);
-        string ruleName = $"JIT_{Guid.NewGuid().ToString().Substring(0, 8)}_{expiration.Ticks}";
-
-        try 
+        public JitAccess(ILoggerFactory loggerFactory)
         {
-            // 3. Authenticate to Azure (Uses the Managed Identity created in Terraform)
-            var armClient = new ArmClient(new DefaultAzureCredential());
+            _logger = loggerFactory.CreateLogger<JitAccess>();
+        }
+
+        [Function("RequestAccess")]
+        public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequestData req)
+        {
+            // ... (Keep the rest of your code exactly the same) ...
+            _logger.LogInformation("Processing JIT Access Request.");
             
-            // 4. Get Environment Variables (Injected by Terraform)
-            string subId = Environment.GetEnvironmentVariable("SUBSCRIPTION_ID");
-            string rgName = Environment.GetEnvironmentVariable("RESOURCE_GROUP_NAME");
-            string serverName = Environment.GetEnvironmentVariable("SQL_SERVER_NAME");
-
-            var serverId = SqlServerResource.CreateResourceIdentifier(subId, rgName, serverName);
-            SqlServerResource sqlServer = armClient.GetSqlServerResource(serverId);
-
-            // 5. Create Firewall Rule (The "Infrastructure Security" work)
-            var ruleData = new SqlFirewallRuleData()
-            {
-                StartIPAddress = clientIp,
-                EndIPAddress = clientIp
-            };
-
-            await sqlServer.GetSqlFirewallRules().CreateOrUpdateAsync(WaitUntil.Completed, ruleName, ruleData);
-
-            // 6. Return Success
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(new { 
-                status = "Access Granted", 
-                expires = expiration, 
-                rule = ruleName 
-            });
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error granting access: {ex.Message}");
-            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteStringAsync("Failed to apply security policy.");
-            return errorResponse;
+            // Just pasting the logic start here to show where it goes
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            // ... rest of logic ...
+            
+            // Make sure you return the response as before
+            return req.CreateResponse(HttpStatusCode.OK); // Placeholder for your logic
         }
     }
-}
+} 
