@@ -45,6 +45,10 @@ jobs:
       working-directory: ${{ env.WORKING_DIRECTORY }}
       continue-on-error: true # Set to false to strictly block builds on vulns
 
+    # ADD THIS STEP FOR DEBUGGING
+    - name: 'List Files in src'
+      run: ls -R src
+
     # 4. Build the Application
     - name: 'Build Project'
       run: dotnet build --configuration Release --no-restore
