@@ -159,4 +159,13 @@ resource "azurerm_linux_function_app" "jit_function" {
     # CRITICAL: Ensures the app can read its own config files from storage
     "AzureWebJobsStorage"          = azurerm_storage_account.func_storage.primary_connection_string
   }
+  
+  lifecycle {
+    ignore_changes = [
+      app_settings["WEBSITE_RUN_FROM_PACKAGE"],
+      app_settings["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"],
+      app_settings["WEBSITE_CONTENTSHARE"],
+      tags
+    ]
+  }
 }

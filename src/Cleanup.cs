@@ -4,7 +4,6 @@ using Azure.ResourceManager.Sql;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-// ADD THIS NAMESPACE LINE
 namespace JitAccessConfig
 {
     public class Cleanup
@@ -22,4 +21,4 @@ namespace JitAccessConfig
             // ... (Keep your existing logic here) ...
         }
     }
-} // <--- Closing bracket
+}
