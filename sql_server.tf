@@ -147,22 +147,14 @@ resource "azurerm_linux_function_app" "jit_function" {
     type = "SystemAssigned"
   }
   
-  # Inject the SQL Server name as an environment variable so the code doesn't need it hardcoded
   app_settings = {
     "SQL_SERVER_NAME"              = azurerm_mssql_server.sql_server.name
     "SUBSCRIPTION_ID"              = data.azurerm_client_config.current.subscription_id
     "RESOURCE_GROUP_NAME"          = module.resource_group[local.default_environment].name
-    
-    # CRITICAL: Forces Azure to recognize the .NET Isolated Worker
     "FUNCTIONS_WORKER_RUNTIME"     = "dotnet-isolated"
-    
-    # CRITICAL: Ensures the app can read its own config files from storage
     "AzureWebJobsStorage"          = azurerm_storage_account.func_storage.primary_connection_string
-    
-    # OPTIONAL: fixes some deployment "lock" issues on Linux
-    "WEBSITE_RUN_FROM_PACKAGE"     = "1"
   }
-  
+
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITE_RUN_FROM_PACKAGE"],
