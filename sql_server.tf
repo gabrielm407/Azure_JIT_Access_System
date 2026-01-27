@@ -158,8 +158,5 @@ resource "azurerm_linux_function_app" "jit_function" {
     
     # CRITICAL: Ensures the app can read its own config files from storage
     "AzureWebJobsStorage"          = azurerm_storage_account.func_storage.primary_connection_string
-    
-    # OPTIONAL: fixes some deployment "lock" issues on Linux
-    "WEBSITE_RUN_FROM_PACKAGE"     = "1"
   }
 }
