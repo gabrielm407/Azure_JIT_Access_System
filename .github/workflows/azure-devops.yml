@@ -1,6 +1,8 @@
 name: Build and Deploy JIT Access (Shift-Left)
 
 on:
+  pull_request:
+    branches: [ main ]
   push:
     branches:
       - main
