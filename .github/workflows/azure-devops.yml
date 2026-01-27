@@ -40,6 +40,11 @@ jobs:
       run: dotnet publish --configuration Release --output ./output
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
+    # ADD THIS DEBUG STEP
+    - name: 'Debug: List Published Files'
+      run: ls -R output
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+
     - name: 'Login via Azure CLI'
       uses: azure/login@v1
       with:
