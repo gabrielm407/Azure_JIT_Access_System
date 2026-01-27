@@ -162,4 +162,13 @@ resource "azurerm_linux_function_app" "jit_function" {
     # OPTIONAL: fixes some deployment "lock" issues on Linux
     "WEBSITE_RUN_FROM_PACKAGE"     = "1"
   }
+  
+  lifecycle {
+    ignore_changes = [
+      app_settings["WEBSITE_RUN_FROM_PACKAGE"],
+      app_settings["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"],
+      app_settings["WEBSITE_CONTENTSHARE"],
+      tags
+    ]
+  }
 }
