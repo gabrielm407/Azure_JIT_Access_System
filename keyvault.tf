@@ -1,5 +1,7 @@
 # ============================================================================
 # Key Vault for Customer-Managed Keys (CMK) Encryption
+# ============================================================================
+
 resource "azurerm_key_vault" "sql_cmk_vault" {
   name                = "sqlcmk${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
   location            = module.resource_group[local.default_environment].location
@@ -106,18 +108,5 @@ resource "azurerm_key_vault_access_policy" "sql_server_policy" {
   ]
 }
 
-# Role Assignment for SQL Server to access Key Vault
-resource "azurerm_role_assignment" "sql_keyvault_access" {
-  count              = var.enable_cmk_encryption ? 1 : 0
-  scope              = azurerm_key_vault.sql_cmk_vault.id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id       = azurerm_mssql_server.sql_server.identity[0].principal_id
-
-  depends_on = [
-    azurerm_key_vault.sql_cmk_vault,
-    azurerm_mssql_server.sql_server
-  ]
-}
-
-# Data Source: Current Azure Context
+# Frequently used Data Source
 data "azurerm_client_config" "current" {}

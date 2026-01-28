@@ -17,7 +17,7 @@ env:
   WORKING_DIRECTORY: 'src'
 
 jobs:
-  # JOB 1: THE SECURITY GATE (Shift-Left)
+  # THE SECURITY GATE (Shift-Left)
   security-gate:
     runs-on: ubuntu-latest
     permissions:
@@ -29,7 +29,6 @@ jobs:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
 
-    # 1. IaC Security: Scan Terraform with Trivy
     # This checks if you left ports open or encryption off
     - name: Run Trivy Vulnerability Scanner (IaC)
       uses: aquasecurity/trivy-action@master
@@ -37,11 +36,10 @@ jobs:
         scan-type: 'config'
         hide-progress: false
         format: 'table'
-        exit-code: '1'        # FAIL the build if issues are found
+        exit-code: '1'         # FAIL the build if issues are found
         severity: 'CRITICAL,HIGH'
-      continue-on-error: true # Set to 'false' in real life, 'true' here so we can see the results first
+      continue-on-error: false # Set to 'false' in real life, 'true' here so we can see the results first
 
-    # 2. SAST Security: Scan C# with CodeQL
     # This checks for SQL Injection and bad logic
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -54,9 +52,9 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
 
-  # JOB 2: DEPLOYMENT (Only runs if Security Gate passes)
+  # DEPLOYMENT (Only runs if Security Gate passes)
   build-and-deploy:
-    needs: security-gate # <--- This dependency enforces the gate
+    needs: security-gate
     runs-on: ubuntu-latest
     
     steps:

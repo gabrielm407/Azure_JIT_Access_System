@@ -1,3 +1,7 @@
+# ============================================================================
+# Virtual network
+# ============================================================================
+
 module "virtual_network" {
   source              = "./modules/virtual_network"
   resource_group_name = module.resource_group[local.default_environment].name

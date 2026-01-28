@@ -1,4 +1,8 @@
-# DATA SOURCES (Look up Policy Definitions)
+# ============================================================================
+# Azure Policy Assignments for SQL Security and Encryption
+# ============================================================================
+
+# DATA SOURCES (Look up Policy Definitions for reference in assignments)
 # Built-in Policy: Enables TDE on SQL Databases
 data "azurerm_policy_definition" "tde_enabled" {
   display_name = "Transparent Data Encryption on SQL databases should be enabled"
