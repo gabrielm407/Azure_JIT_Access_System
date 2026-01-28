@@ -1,4 +1,3 @@
-```markdown
 # Observability & Threat Hunting (KQL)
 
 These Kusto Query Language (KQL) queries can be run in **Application Insights -> Logs** to monitor the JIT system.

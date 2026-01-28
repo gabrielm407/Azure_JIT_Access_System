@@ -1,4 +1,3 @@
-```markdown
 # Troubleshooting Runbook
 
 This document details common errors encountered during the development of this system and their solutions.
@@ -15,8 +14,8 @@ This is caused by a **Region Mismatch** between the Function App and its Storage
 * *Impact:* The latency caused the file share mount to timeout during boot, leaving the app in a zombie state.
 
 ### Solution
-1.  Update Terraform to explicitly set `location = "Canada Central"` for the `azurerm_storage_account`.
-2.  **"Nuke and Pave":** You must destroy and recreate the resources to fix the corruption.
+1. Update Terraform to explicitly set `location = "Canada Central"` for the `azurerm_storage_account`.
+2. **"Nuke and Pave":** You must destroy and recreate the resources to fix the corruption.
     ```bash
     terraform destroy -target=azurerm_linux_function_app.jit_function
     terraform apply
@@ -33,8 +32,8 @@ This is caused by a **Region Mismatch** between the Function App and its Storage
 The Terraform configuration had `public_network_access_enabled = false` (Hardened Default). This physically disables the public listener, meaning **no** firewall rules can ever work.
 
 ### Solution
-1.  Update Terraform: Set `public_network_access_enabled = true`.
-2.  Security Note: This is safe because the default firewall rule list is empty (Deny All). The JIT app manages the allow-list dynamically.
+1. Update Terraform: Set `public_network_access_enabled = true`.
+2. Security Note: This is safe because the default firewall rule list is empty (Deny All). The JIT app manages the allow-list dynamically.
 
 ---
 

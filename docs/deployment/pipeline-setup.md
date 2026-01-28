@@ -1,4 +1,3 @@
-```markdown
 # Deployment Guide: CI/CD Pipeline
 
 ## The "Shift-Left" Strategy
@@ -29,7 +28,6 @@ graph TD
     D -- Fail --> X
 ```
 
-```markdown
 # 🚀 Deployment & Pipeline Setup
 
 This guide details how to configure the GitHub Actions pipeline, manage secrets, and handle security exceptions for the JIT Access System.
