@@ -8,7 +8,7 @@ resource "azurerm_storage_account" "sql_audit_storage" {
   location                 = module.resource_group[local.default_environment].location
   account_tier             = "Standard"
   account_replication_type = "GRS"
-  
+
   # Enable encryption at rest
   https_traffic_only_enabled = true
   min_tls_version            = "TLS1_2"
@@ -19,15 +19,15 @@ resource "azurerm_storage_account" "sql_audit_storage" {
 
   network_rules {
     default_action = "Deny"
-    ip_rules       = ["0.0.0.0/0"]      # This allows all traffic, but it is better to be only your public IP address
-    bypass         = ["AzureServices"]  # Optional: often needed for metrics/logging
+    ip_rules       = ["0.0.0.0/0"]     # This allows all traffic, but it is better to be only your public IP address
+    bypass         = ["AzureServices"] # Optional: often needed for metrics/logging
   }
 
   tags = {
-    purpose       = "sql-audit-and-vulnerability-assessment"
-    encryption    = "enabled"
-    compliance    = "required"
-    environment   = local.default_environment
+    purpose     = "sql-audit-and-vulnerability-assessment"
+    encryption  = "enabled"
+    compliance  = "required"
+    environment = local.default_environment
   }
 
   depends_on = [module.resource_group, azurerm_role_assignment.storage_blob_data_contributor]

@@ -34,8 +34,8 @@ output "sql_server_name" {
 output "tde_status" {
   description = "Status of Transparent Data Encryption on SQL Server"
   value = {
-    server_id           = azurerm_mssql_server_transparent_data_encryption.sql_tde.server_id
-    auto_rotation       = azurerm_mssql_server_transparent_data_encryption.sql_tde.auto_rotation_enabled
+    server_id     = azurerm_mssql_server_transparent_data_encryption.sql_tde.server_id
+    auto_rotation = azurerm_mssql_server_transparent_data_encryption.sql_tde.auto_rotation_enabled
   }
 }
 
@@ -100,9 +100,9 @@ output "security_alert_retention_days" {
 output "azure_policy_assignments" {
   description = "Summary of Azure Policy assignments for SQL compliance"
   value = {
-    tde_enabled_policy     = azurerm_subscription_policy_assignment.sql_tde_enabled.name
-    encryption_at_rest     = azurerm_subscription_policy_assignment.sql_encryption_at_rest.name
-    cmk_encryption_policy  = azurerm_subscription_policy_assignment.sql_cmk_encryption.name
+    tde_enabled_policy    = azurerm_subscription_policy_assignment.sql_tde_enabled.name
+    encryption_at_rest    = azurerm_subscription_policy_assignment.sql_encryption_at_rest.name
+    cmk_encryption_policy = azurerm_subscription_policy_assignment.sql_cmk_encryption.name
     # firewall_policy        = azurerm_subscription_policy_assignment.sql_firewall_rules.name
   }
 }
@@ -120,15 +120,15 @@ output "keyvault_private_endpoint_id" {
 output "compliance_summary" {
   description = "Summary of encryption and compliance status"
   value = {
-    tde_enabled                  = true
-    cmk_encryption_enabled       = var.enable_cmk_encryption
-    auditing_enabled             = true
-    vulnerability_assessment     = var.enable_vulnerability_assessment
-    security_alerts_enabled      = var.enable_security_alerts
-    public_network_access        = azurerm_mssql_server.sql_server.public_network_access_enabled
-    private_endpoint_configured  = true
-    network_encryption_enforced  = true
-    retention_period_days        = var.sql_audit_retention_days
-    compliance_framework         = "Azure Policy + Terraform IaC"
+    tde_enabled                 = true
+    cmk_encryption_enabled      = var.enable_cmk_encryption
+    auditing_enabled            = true
+    vulnerability_assessment    = var.enable_vulnerability_assessment
+    security_alerts_enabled     = var.enable_security_alerts
+    public_network_access       = azurerm_mssql_server.sql_server.public_network_access_enabled
+    private_endpoint_configured = true
+    network_encryption_enforced = true
+    retention_period_days       = var.sql_audit_retention_days
+    compliance_framework        = "Azure Policy + Terraform IaC"
   }
 }

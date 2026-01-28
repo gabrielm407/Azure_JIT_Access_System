@@ -10,20 +10,20 @@ resource "azurerm_key_vault" "sql_cmk_vault" {
   sku_name            = "premium"
 
   # Enable for disk encryption
-  enabled_for_disk_encryption = true
+  enabled_for_disk_encryption     = true
   enabled_for_template_deployment = true
-  enabled_for_deployment = true
-  
+  enabled_for_deployment          = true
+
   # Network security
   public_network_access_enabled = false
   purge_protection_enabled      = true
   soft_delete_retention_days    = 90
 
   tags = {
-    purpose       = "sql-cmk-encryption"
-    encryption    = "customer-managed-keys"
-    compliance    = "required"
-    environment   = local.default_environment
+    purpose     = "sql-cmk-encryption"
+    encryption  = "customer-managed-keys"
+    compliance  = "required"
+    environment = local.default_environment
   }
 
   depends_on = [module.resource_group]
@@ -63,12 +63,12 @@ resource "azurerm_private_dns_zone_virtual_network_link" "keyvault_vnet_link" {
 
 # Customer-Managed Key (CMK) for SQL Encryption
 resource "azurerm_key_vault_key" "sql_cmk_key" {
-  count            = var.enable_cmk_encryption ? 1 : 0
-  name             = "sql-tde-key"
-  key_vault_id     = azurerm_key_vault.sql_cmk_vault.id
-  key_type         = "RSA"
-  key_size         = 2048
-  
+  count        = var.enable_cmk_encryption ? 1 : 0
+  name         = "sql-tde-key"
+  key_vault_id = azurerm_key_vault.sql_cmk_vault.id
+  key_type     = "RSA"
+  key_size     = 2048
+
   key_opts = [
     "decrypt",
     "encrypt",
@@ -83,10 +83,10 @@ resource "azurerm_key_vault_key" "sql_cmk_key" {
 
 # Key Vault Access Policy for SQL Server
 resource "azurerm_key_vault_access_policy" "sql_server_policy" {
-  count            = var.enable_cmk_encryption ? 1 : 0
-  key_vault_id     = azurerm_key_vault.sql_cmk_vault.id
-  tenant_id        = data.azurerm_client_config.current.tenant_id
-  object_id        = azurerm_mssql_server.sql_server.identity[0].principal_id
+  count        = var.enable_cmk_encryption ? 1 : 0
+  key_vault_id = azurerm_key_vault.sql_cmk_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_mssql_server.sql_server.identity[0].principal_id
 
   key_permissions = [
     "Get",

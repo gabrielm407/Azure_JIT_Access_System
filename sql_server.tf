@@ -4,13 +4,13 @@
 
 # Azure SQL Server with Public Network Access enabled
 resource "azurerm_mssql_server" "sql_server" {
-  name                         = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
-  resource_group_name          = module.resource_group[local.default_environment].name
-  location                     = "East US 2"
-  tags                         = module.resource_group[local.default_environment].tags
-  version                      = "12.0"
-  administrator_login          = var.sql_admin_username
-  administrator_login_password = var.sql_admin_password
+  name                          = "sqlserver-${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
+  resource_group_name           = module.resource_group[local.default_environment].name
+  location                      = "East US 2"
+  tags                          = module.resource_group[local.default_environment].tags
+  version                       = "12.0"
+  administrator_login           = var.sql_admin_username
+  administrator_login_password  = var.sql_admin_password
   public_network_access_enabled = true
 
   # Enable managed identity for use with Customer-Managed Keys (CMK)
@@ -76,15 +76,15 @@ resource "azurerm_private_dns_a_record" "sql_dns_record" {
 # Transparent Data Encryption (TDE) Configuration
 # Enable TDE with service-managed key (default)
 resource "azurerm_mssql_server_transparent_data_encryption" "sql_tde" {
-  server_id            = azurerm_mssql_server.sql_server.id
+  server_id             = azurerm_mssql_server.sql_server.id
   auto_rotation_enabled = true
 }
 
 # Advanced Data Security Configuration
 resource "azurerm_mssql_server_extended_auditing_policy" "sql_security_alerts" {
-  server_id              = azurerm_mssql_server.sql_server.id
-  enabled                = true
-  retention_in_days      = 30
+  server_id         = azurerm_mssql_server.sql_server.id
+  enabled           = true
+  retention_in_days = 30
 
   depends_on = [azurerm_mssql_server_transparent_data_encryption.sql_tde]
 }
@@ -100,7 +100,7 @@ resource "azurerm_mssql_server_security_alert_policy" "sql_security_alerts" {
 resource "azurerm_mssql_server_vulnerability_assessment" "sql_vulnerability_assessment" {
   server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.sql_security_alerts.id
   storage_container_path          = "${azurerm_storage_account.sql_audit_storage.primary_blob_endpoint}vulnerability-assessments"
-  
+
   recurring_scans {
     enabled                   = true
     email_subscription_admins = true
@@ -139,7 +139,7 @@ resource "azurerm_linux_function_app" "jit_function" {
 
   site_config {
     application_stack {
-      dotnet_version = "8.0"
+      dotnet_version              = "8.0"
       use_dotnet_isolated_runtime = true
     }
     always_on = false
@@ -148,13 +148,14 @@ resource "azurerm_linux_function_app" "jit_function" {
   identity {
     type = "SystemAssigned"
   }
-  
+
   app_settings = {
-    "SQL_SERVER_NAME"              = azurerm_mssql_server.sql_server.name
-    "SUBSCRIPTION_ID"              = data.azurerm_client_config.current.subscription_id
-    "RESOURCE_GROUP_NAME"          = module.resource_group[local.default_environment].name
-    "FUNCTIONS_WORKER_RUNTIME"     = "dotnet-isolated"
-    "AzureWebJobsStorage"          = azurerm_storage_account.func_storage.primary_connection_string
+    "SQL_SERVER_NAME"                       = azurerm_mssql_server.sql_server.name
+    "SUBSCRIPTION_ID"                       = data.azurerm_client_config.current.subscription_id
+    "RESOURCE_GROUP_NAME"                   = module.resource_group[local.default_environment].name
+    "FUNCTIONS_WORKER_RUNTIME"              = "dotnet-isolated"
+    "AzureWebJobsStorage"                   = azurerm_storage_account.func_storage.primary_connection_string
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.app_insights.connection_string
   }
 
   lifecycle {

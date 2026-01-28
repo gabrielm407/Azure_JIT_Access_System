@@ -28,10 +28,10 @@ resource "azurerm_role_assignment" "func_sql_security_manager" {
 
 # Role Assignment for SQL Server to access Key Vault
 resource "azurerm_role_assignment" "sql_keyvault_access" {
-  count              = var.enable_cmk_encryption ? 1 : 0
-  scope              = azurerm_key_vault.sql_cmk_vault.id
+  count                = var.enable_cmk_encryption ? 1 : 0
+  scope                = azurerm_key_vault.sql_cmk_vault.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id       = azurerm_mssql_server.sql_server.identity[0].principal_id
+  principal_id         = azurerm_mssql_server.sql_server.identity[0].principal_id
 
   depends_on = [
     azurerm_key_vault.sql_cmk_vault,
