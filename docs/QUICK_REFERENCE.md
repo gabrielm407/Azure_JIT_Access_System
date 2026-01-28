@@ -1,304 +1,481 @@
-# Azure Policy & Encryption Quick Reference
+# Quick Reference - JIT Access System
 
-## 🔐 Encryption Implementation Summary
+## 🚀 Request JIT Access (For Users)
 
-### TDE Configuration
-```hcl
-# Service-Managed TDE (Automatic)
-resource "azurerm_mssql_server_transparent_data_encryption" "sql_tde" {
-  server_id            = azurerm_mssql_server.sql_server.id
-  auto_rotation_enabled = true  # Automatic key rotation
-}
+### Get Your IP Address
+```powershell
+# PowerShell
+[System.Net.Dns]::GetHostAddresses([System.Net.Dns]::GetHostName()) | 
+  ForEach-Object { if ($_.AddressFamily -eq "InterNetwork") { $_.IPAddressToString } }
+
+# PowerShell (simple)
+curl ifconfig.me
+
+# Bash
+hostname -I  # Linux
+ifconfig     # macOS
 ```
 
-### Customer-Managed Keys (CMK)
-```hcl
-# Enable via variable
-enable_cmk_encryption = true
-
-# Key stored in Azure Key Vault
-resource "azurerm_key_vault_key" "sql_cmk_key" {
-  name         = "sql-tde-key"
-  key_vault_id = azurerm_key_vault.sql_cmk_vault.id
-  key_type     = "RSA"
-  key_size     = 2048
-}
-```
+**Example Output**: `203.0.113.42`
 
 ---
 
-## 📋 Azure Policy Assignments
+### Request 1-Hour Database Access
 
-### 1. TDE Enforcement Policy
-```hcl
-resource "azurerm_subscription_policy_assignment" "sql_tde_enabled" {
-  name                 = "enforce-sql-tde-enabled"
-  subscription_id      = "/subscriptions/${var.ARM_SUBSCRIPTION_ID}"
-  policy_definition_id = "/subscriptions/.../policyDefinitions/17k78e20-9358-41c9-923c-fb736d3e48ce"
-  enforcement_mode     = "Default"  # Change to "Audit" for review mode
-}
-```
-
-**Effect**: Denies SQL databases without TDE enabled
-
-### 2. Encryption-at-Rest Policy
-```hcl
-resource "azurerm_subscription_policy_assignment" "sql_encryption_at_rest" {
-  enforcement_mode = "Default"
-}
-```
-
-**Effect**: Ensures all data is encrypted when stored
-
-### 3. CMK Encryption Audit Policy
-```hcl
-resource "azurerm_subscription_policy_assignment" "sql_cmk_encryption" {
-  enforcement_mode = "Audit"  # Review only, doesn't deny
-}
-```
-
-**Effect**: Identifies resources not using customer-managed keys
-
-### 4. Public Network Access Policy
-```hcl
-resource "azurerm_subscription_policy_assignment" "sql_firewall_rules" {
-  enforcement_mode = "Default"
-}
-```
-
-**Effect**: Denies public network access to SQL servers
-
----
-
-## 🔑 Key Vault Setup for CMK
-
-### Create Key Vault
-```hcl
-resource "azurerm_key_vault" "sql_cmk_vault" {
-  name                      = "sqlcmk-vault"
-  sku_name                  = "premium"
-  purge_protection_enabled  = true
-  soft_delete_retention_days = 90
-  public_network_access_enabled = false
-  
-  # Require private endpoint for access
-}
-```
-
-### Grant SQL Server Access
-```hcl
-resource "azurerm_key_vault_access_policy" "sql_server_policy" {
-  key_vault_id = azurerm_key_vault.sql_cmk_vault.id
-  object_id    = azurerm_mssql_server.sql_server.identity[0].principal_id
-  
-  key_permissions = [
-    "Get", "List", "UnwrapKey", "WrapKey",
-    "Sign", "Verify", "Create", "Update", "Delete"
-  ]
-}
-```
-
----
-
-## 📊 Auditing & Compliance
-
-### Server-Level Auditing
-```hcl
-resource "azurerm_mssql_server_audit_policy" "sql_audit_policy" {
-  server_id                       = azurerm_mssql_server.sql_server.id
-  enabled                         = true
-  storage_endpoint                = azurerm_storage_account.sql_audit_storage.primary_blob_endpoint
-  storage_account_access_key      = azurerm_storage_account.sql_audit_storage.primary_access_key
-  retention_in_days               = 30
-  
-  audit_actions_and_groups = [
-    "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
-    "FAILED_DATABASE_AUTHENTICATION_GROUP",
-    "BATCH_COMPLETED_GROUP",
-    "SCHEMA_OBJECT_ACCESS_GROUP"
-  ]
-}
-```
-
-### Database-Level Auditing
-```hcl
-resource "azurerm_mssql_database_extended_auditing_policy" "sql_db_audit" {
-  database_id                = azurerm_mssql_database.sql_database.id
-  enabled                    = true
-  storage_endpoint           = azurerm_storage_account.sql_audit_storage.primary_blob_endpoint
-  retention_in_days          = 30
-}
-```
-
-### Security Alerts
-```hcl
-resource "azurerm_mssql_server_security_alert_policy" "sql_security_alerts" {
-  resource_group_name       = var.resource_group_name
-  server_name               = azurerm_mssql_server.sql_server.name
-  state                     = "Enabled"
-  retention_days            = 30
-  email_notification_admins = true
-}
-```
-
----
-
-## 🛡️ Network Security
-
-### Private Endpoint (No Public Access)
-```hcl
-resource "azurerm_private_endpoint" "sql_private_endpoint" {
-  subnet_id = module.virtual_network.subnet_id
-  
-  private_service_connection {
-    private_connection_resource_id = azurerm_mssql_server.sql_server.id
-    subresource_names              = ["sqlServer"]
-    is_manual_connection           = false
-  }
-}
-```
-
-### Private DNS Zone
-```hcl
-resource "azurerm_private_dns_zone" "sql_dns" {
-  name = "privatelink.database.windows.net"
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "sql_vnet_link" {
-  private_dns_zone_name = azurerm_private_dns_zone.sql_dns.name
-  virtual_network_id    = module.virtual_network.id
-}
-```
-
----
-
-## 🚀 Deployment Examples
-
-### Basic Deployment (Service-Managed TDE)
+#### Option 1: Using curl (Linux/macOS)
 ```bash
+curl -X POST https://YOUR_DOMAIN/api/RequestAccess \
+     -H "Content-Type: application/json" \
+     -d '{"ip": "203.0.113.42"}'
+```
+
+#### Option 2: Using PowerShell (Windows)
+```powershell
+$body = @{
+    ip = "203.0.113.42"
+} | ConvertTo-Json
+
+Invoke-WebRequest -Uri "https://YOUR_DOMAIN/api/RequestAccess" `
+  -Method POST `
+  -Headers @{"Content-Type"="application/json"} `
+  -Body $body
+```
+
+#### Option 3: Using Postman
+1. Create POST request to: `https://YOUR_DOMAIN/api/RequestAccess`
+2. Headers: `Content-Type: application/json`
+3. Body (raw JSON):
+```json
+{
+  "ip": "203.0.113.42"
+}
+```
+
+**Expected Response**:
+```json
+{
+  "status": "Access Granted",
+  "expires": "2026-01-28T15:30:45Z",
+  "rule": "JIT_a1b2c3d4_638419105445678901",
+  "duration": "1 hour",
+  "sqlServer": "my-sql-server.database.windows.net"
+}
+```
+
+---
+
+### Connect to Database
+
+#### Using SQL Server Management Studio (SSMS)
+1. Open SSMS
+2. Server: `my-sql-server.database.windows.net`
+3. Auth: SQL Server Authentication
+4. Login: `sqladmin`
+5. Password: `YOUR_SQL_PASSWORD`
+6. Database: `sentineldb`
+7. Click Connect
+
+#### Using sqlcmd (CLI)
+```bash
+sqlcmd -S my-sql-server.database.windows.net \
+  -U sqladmin \
+  -P "YOUR_SQL_PASSWORD" \
+  -d sentineldb
+```
+
+#### Using Azure Data Studio
+1. New Connection
+2. Server: `my-sql-server.database.windows.net`
+3. Database: `sentineldb`
+4. Authentication: SQL Login
+5. User: `sqladmin`
+6. Password: `YOUR_SQL_PASSWORD`
+7. Connect
+
+---
+
+### Test Connection
+```sql
+-- Check server name
+SELECT @@SERVERNAME AS ServerName
+
+-- Check database name
+SELECT DB_NAME() AS DatabaseName
+
+-- Check server time
+SELECT GETUTC() AS ServerUTC, GETDATE() AS ServerLocal
+
+-- Simple query
+SELECT TOP 5 * FROM sys.tables
+```
+
+---
+
+## 🔧 For Deployment (DevOps/Infrastructure)
+
+### Prerequisites Checklist
+```bash
+# 1. Verify Terraform
+terraform version
+# Expected: Terraform v1.x or higher
+
+# 2. Verify Azure CLI
+az version
+# Expected: 2.x or higher
+
+# 3. Set environment variables
+export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export ARM_TENANT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export ARM_CLIENT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export ARM_CLIENT_SECRET="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# 4. Test authentication
+az login --service-principal \
+  -u $ARM_CLIENT_ID \
+  -p $ARM_CLIENT_SECRET \
+  --tenant $ARM_TENANT_ID
+```
+
+### Deploy in 3 Steps
+```bash
+# Step 1: Initialize
+cd "c:\Users\Admin\Desktop\GitHub Projects\Azure_kubernetes_terraform"
 terraform init
-terraform plan
-terraform apply
+
+# Step 2: Plan
+terraform plan -out=tfplan
+
+# Step 3: Apply
+terraform apply tfplan
 ```
 
-### With Customer-Managed Keys
+### Get Output Values
 ```bash
-terraform apply \
-  -var="enable_cmk_encryption=true" \
-  -var="sql_audit_retention_days=90"
-```
+# All outputs
+terraform output
 
-### Audit Mode (No Enforcement)
-```bash
-# First, set all policies to "Audit" mode
-# Review compliance status without blocking changes
-terraform apply
-
-# Then enable enforcement
-terraform apply -var="enforcement_mode=Default"
+# Individual outputs
+terraform output function_url
+terraform output sql_server_name
+terraform output storage_account_name
+terraform output function_id
+terraform output sql_server_id
 ```
 
 ---
 
 ## ✅ Verification Commands
 
-### Check TDE Status
+### Verify Resources Exist
 ```bash
-# Terraform output
-terraform output tde_status
+# Check SQL Server
+az sql server show \
+  --resource-group my-resource-group \
+  --name my-sql-server
 
-# Or in Azure Portal:
-# SQL Server > Security > Transparent Data Encryption
-# Should show: "Protected by service-managed key" or custom CMK
+# Check Database
+az sql db show \
+  --resource-group my-resource-group \
+  --server my-sql-server \
+  --name sentineldb
+
+# Check Function App
+az functionapp show \
+  --resource-group my-resource-group \
+  --name jit-access-function
+
+# Check Storage Account
+az storage account show \
+  --resource-group my-resource-group \
+  --name YOUR_STORAGE_ACCOUNT
 ```
 
-### Verify Audit Logs
+### Verify Firewall Rules
 ```bash
-# Check storage account
+# List all firewall rules
+az sql server firewall-rule list \
+  --resource-group my-resource-group \
+  --server my-sql-server \
+  --query "[].{Name:name, StartIP:startIpAddress, EndIP:endIpAddress}"
+
+# Check if JIT rule exists
+az sql server firewall-rule list \
+  --resource-group my-resource-group \
+  --server my-sql-server \
+  --query "[?name.starts_with(@, 'JIT_')]"
+```
+
+### Verify Function Configuration
+```bash
+# Check function settings
+az functionapp config appsettings list \
+  --resource-group my-resource-group \
+  --name jit-access-function
+
+# Check function identity
+az functionapp identity show \
+  --resource-group my-resource-group \
+  --name jit-access-function
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### Common Issues & Solutions
+
+#### Issue: "Invalid JSON in request"
+**Problem**: Malformed request payload
+**Solution**: Verify exact format:
+```json
+{"ip": "203.0.113.42"}
+```
+**NOT**:
+```json
+{ip: 203.0.113.42}
+```
+
+---
+
+#### Issue: "Unauthorized" or "Forbidden"
+**Problem**: Service Principal doesn't have permissions
+**Solution**:
+```bash
+# Grant SQL Admin role
+az role assignment create \
+  --assignee-object-id YOUR_PRINCIPAL_ID \
+  --role "SQL Server Contributor" \
+  --scope /subscriptions/YOUR_SUBSCRIPTION_ID
+```
+
+---
+
+#### Issue: "Firewall rule already exists"
+**Problem**: Rule name collision (very rare)
+**Solution**: Firewall rules use unique GUIDs - this shouldn't happen
+**Workaround**: Wait a moment and try again
+
+---
+
+#### Issue: "Connection timeout"
+**Problem**: Firewall rule expired (after 1 hour)
+**Solution**: Request access again with the JIT API
+```bash
+curl -X POST https://YOUR_DOMAIN/api/RequestAccess \
+     -H "Content-Type: application/json" \
+     -d '{"ip": "203.0.113.42"}'
+```
+
+---
+
+#### Issue: "Function returns error 500"
+**Problem**: Function execution failed
+**Solution**: Check Application Insights logs
+```bash
+# Get recent function logs
+az functionapp log download \
+  --resource-group my-resource-group \
+  --name jit-access-function
+```
+
+---
+
+#### Issue: "Can't find function URL"
+**Problem**: Function not deployed or not running
+**Solution**:
+```bash
+# Get function URL
+terraform output function_url
+
+# Or from Azure CLI
+az functionapp show \
+  --resource-group my-resource-group \
+  --name jit-access-function \
+  --query "defaultHostName"
+```
+
+---
+
+#### Issue: "SQL Server not reachable"
+**Problem**: Private endpoint not configured or network issue
+**Solution**:
+```bash
+# Verify private endpoint
+az network private-endpoint list \
+  --resource-group my-resource-group
+
+# Test connectivity from Function
+# (Already configured - should work automatically)
+```
+
+---
+
+## 📊 Monitoring Commands
+
+### Check Function Invocations
+```bash
+# Get last 24 hours of invocations
+az monitor metrics list \
+  --resource /subscriptions/YOUR_SUB/resourceGroups/my-resource-group/providers/Microsoft.Web/sites/jit-access-function \
+  --metric "FunctionExecutionCount" \
+  --start-time 2026-01-27T00:00:00Z \
+  --interval PT1H
+```
+
+### Check Storage Account Audit Logs
+```bash
+# List audit log blobs
 az storage blob list \
-  --container-name sql-audit-logs \
-  --account-name <storage-account>
+  --container-name jit-access-logs \
+  --account-name YOUR_STORAGE_ACCOUNT \
+  --query "[].name"
+
+# Download a specific log
+az storage blob download \
+  --container-name jit-access-logs \
+  --name "log-filename.json" \
+  --account-name YOUR_STORAGE_ACCOUNT \
+  --file local-filename.json
 ```
 
-### View Policy Compliance
+### Check Application Insights
 ```bash
-# List policy assignments
-terraform output azure_policy_assignments
-
-# Check compliance in Azure Portal:
-# Policy > Assignments > Filter by "sql-"
-```
-
-### Validate CMK Configuration
-```bash
-# List Key Vault keys
-terraform output cmk_key_id
-
-# Check access policy
-az keyvault access-policy list --vault-name <vault-name>
+# Query recent traces
+az monitor app-insights metrics show \
+  --resource-group my-resource-group \
+  --app YOUR_APP_INSIGHTS_NAME \
+  --metric "requests/count"
 ```
 
 ---
 
-## 📈 Compliance Checklist
+## 🗑️ Cleanup Commands
 
-- [ ] TDE enabled on SQL Server
-- [ ] Encryption at rest configured
-- [ ] Public network access disabled
-- [ ] Private endpoint configured
-- [ ] Auditing enabled (server + database level)
-- [ ] Vulnerability assessment scheduled
-- [ ] Security alerts configured
-- [ ] Azure Policy assignments created
-- [ ] CMK keys rotated (if using CMK)
-- [ ] Audit logs retained for 30+ days
+### Delete Specific Firewall Rule
+```bash
+# Delete a JIT rule (use if cleanup didn't work)
+az sql server firewall-rule delete \
+  --resource-group my-resource-group \
+  --server my-sql-server \
+  --name "JIT_a1b2c3d4_638419105445678901"
+```
+
+### Delete All JIT Rules
+```bash
+# WARNING: This deletes all JIT rules!
+# List JIT rules first
+az sql server firewall-rule list \
+  --resource-group my-resource-group \
+  --server my-sql-server \
+  --query "[?name.starts_with(@, 'JIT_')].name" \
+  --output tsv | \
+while read rule; do
+  az sql server firewall-rule delete \
+    --resource-group my-resource-group \
+    --server my-sql-server \
+    --name "$rule"
+done
+```
+
+### Destroy All Infrastructure
+```bash
+# WARNING: This deletes everything!
+terraform destroy
+
+# Confirm by typing 'yes'
+```
 
 ---
 
-## 🔄 Enforcement Modes Explained
+## 📈 Performance & Limits
 
-| Mode | Effect | Use Case |
-|------|--------|----------|
-| `Default` | **Enforces** policy - denies non-compliant resources | Production, strict compliance |
-| `Audit` | **Reports only** - allows non-compliant resources | Initial assessment, monitoring |
-| `Disabled` | No enforcement | Troubleshooting |
+### Function Limits
+- Max response time: 10 seconds
+- Max payload size: 100 MB
+- Concurrent connections: Limited by plan
+- Timeout: 5 minutes
+
+### SQL Server Limits
+- Max firewall rules: 128 per server
+- Max IP addresses per rule: 1 (for JIT)
+- Replication points: Automatic, daily
+- Connection limit: 32,767 concurrent
+
+### Storage Account Limits
+- Max blob size: 4.75 TB
+- Max file share size: 100 TB
+- Max capacity: Unlimited (pay-as-you-go)
+
+---
+
+## 🔐 Security Reminders
+
+### DO:
+- ✅ Keep credentials in environment variables
+- ✅ Rotate SQL admin password quarterly
+- ✅ Monitor audit logs weekly
+- ✅ Use managed identity (not connection strings)
+- ✅ Enable monitoring and alerts
+
+### DON'T:
+- ❌ Hardcode credentials in code
+- ❌ Share function URLs publicly
+- ❌ Keep credentials in Git history
+- ❌ Use weak passwords
+- ❌ Ignore security alerts
+
+---
+
+## 📚 Related Documentation
+
+- **Full Architecture**: See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
+- **Implementation Details**: See [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
+- **Deployment Steps**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- **All Documentation**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
+
+---
+
+## 🆘 Getting Help
+
+### For Usage Questions
+1. Check [QUICK_REFERENCE.md](QUICK_REFERENCE.md) (this file)
+2. See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for index
+
+### For Deployment Issues
+1. See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+2. Check troubleshooting section above
+
+### For Architecture Questions
+1. See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
+2. Read [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
 
 ---
 
 ## 💡 Pro Tips
 
-1. **Start with Audit**: Use Audit mode first to understand compliance gaps
-2. **Gradual Rollout**: Move policies to Default mode after team adjustment
-3. **Monitor Regularly**: Check Azure Policy dashboard monthly
-4. **Key Rotation**: Enable auto-rotation for CMK keys
-5. **Cost Optimization**: Use service-managed TDE unless CMK required for compliance
-
----
-
-## Common Issues & Solutions
-
-### Issue: "CMK key not authorized"
+**Tip 1**: Save your IP address in a script
 ```bash
-# Ensure SQL Server managed identity has access
-az role assignment create \
-  --role "Key Vault Crypto Service Encryption User" \
-  --assignee <sql-server-principal-id> \
-  --scope <key-vault-id>
+#!/bin/bash
+IP=$(curl -s ifconfig.me)
+curl -X POST https://YOUR_DOMAIN/api/RequestAccess \
+     -H "Content-Type: application/json" \
+     -d "{\"ip\": \"$IP\"}"
 ```
 
-### Issue: "Policy assignment failed"
+**Tip 2**: Set up a shell alias
 ```bash
-# Verify subscription permissions
-az policy assignment create \
-  --name enforce-tde \
-  --display-name "Enforce TDE" \
-  --policy-definition-id <policy-id>
+alias request-db-access='curl -X POST https://YOUR_DOMAIN/api/RequestAccess -H "Content-Type: application/json" -d "{\"ip\": \"$(curl -s ifconfig.me)\"}"'
 ```
 
-### Issue: "Audit logs not appearing"
-```bash
-# Re-enable audit policy
-terraform destroy -target=azurerm_mssql_server_audit_policy.sql_audit_policy
-terraform apply -target=azurerm_mssql_server_audit_policy.sql_audit_policy
+**Tip 3**: Create an automation script
+```powershell
+function Request-DatabaseAccess {
+    param([string]$FunctionURL)
+    $IP = (curl ifconfig.me).Content.Trim()
+    $response = curl -X POST "$FunctionURL/api/RequestAccess" `
+      -H "Content-Type: application/json" `
+      -d "{`"ip`": `"$IP`"}"
+    Write-Host "Access granted until: $($response.expires)"
+}
 ```
 

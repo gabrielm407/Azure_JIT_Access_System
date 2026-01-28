@@ -1,4 +1,4 @@
-# Azure SQL Server Encryption & Compliance Architecture Diagram
+# Azure JIT Access System - Architecture Diagram
 
 ## Complete Resource Architecture
 
@@ -6,398 +6,361 @@
 graph TB
     subgraph "Azure Subscription"
         subgraph "Resource Group"
-            RG["Resource Group<br/>(my-resourcegroup-dev)"]
+            RG["Resource Group<br/>(my-resource-group)"]
         end
         
-        subgraph "Virtual Network"
+        subgraph "Virtual Network & Networking"
             VNET["Virtual Network<br/>(10.0.0.0/16)"]
             SUBNET["Subnet<br/>(Private)"]
+            NSG["Network Security Group"]
         end
         
         subgraph "SQL Server & Database"
-            SQLSRV["Azure SQL Server<br/>(Service-Managed/CMK)<br/>⚡ Cost: $15/mo"]
-            SQLDB["SQL Database<br/>(Encrypted with TDE)<br/>sentineldb"]
+            SQLSRV["Azure SQL Server<br/>(Private Access Only)<br/>⚡ Cost: $15/mo"]
+            SQLDB["SQL Database<br/>(TDE Encrypted)<br/>sentineldb"]
             MANAGED_ID["Managed Identity<br/>(SystemAssigned)"]
+            FIREWALL["Dynamic Firewall<br/>(JIT Rules)"]
         end
         
-        subgraph "Key Vault (Optional CMK)"
-            KEYVAULT["Azure Key Vault<br/>(Premium SKU)<br/>⚡ Cost: $28/mo<br/>if enabled"]
-            CMK_KEY["CMK Key<br/>(RSA-2048)"]
-            SOFT_DELETE["Soft Delete<br/>(90 days)"]
+        subgraph "Azure Functions (JIT Access Engine)"
+            FUNC["Azure Function<br/>(RequestAccess)<br/>.NET 8 Isolated<br/>⚡ Serverless"]
+            FUNCID["Function Managed ID<br/>(For SQL Access)"]
         end
         
-        subgraph "Storage & Auditing"
-            STORAGE["Storage Account<br/>(GRS)<br/>⚡ Cost: $10/mo"]
-            AUDIT_LOGS["Audit Logs<br/>Container"]
-            VULN_REPORTS["Vulnerability<br/>Reports Container"]
+        subgraph "API Gateway & Auth"
+            APIGW["API Endpoint<br/>(curl -X POST)"]
+            AUTH["Authentication<br/>(Service Principal)"]
+            VALIDATE["Request Validation<br/>(IP, Duration)"]
         end
         
-        subgraph "Network Security"
+        subgraph "Storage & Logging"
+            STORAGE["Storage Account<br/>(Audit Logs)<br/>⚡ Cost: $10/mo"]
+            LOGS["JIT Access Logs<br/>Container"]
+        end
+        
+        subgraph "Network Security (Private Access)"
             SQLPE["SQL Private Endpoint<br/>⚡ Cost: $0.35/mo"]
-            KVPE["Key Vault Private Endpoint<br/>⚡ Cost: $0.35/mo"]
             SQLDNS["Private DNS Zone<br/>(database.windows.net)<br/>Free"]
-            KVDNS["Private DNS Zone<br/>(vaultcore.azure.net)<br/>Free"]
         end
         
-        subgraph "Azure Policy & Compliance"
-            POLICIES["Azure Policy Assignments<br/>Free"]
-            P1["TDE Enforcement"]
-            P2["Encryption at Rest"]
-            P3["CMK Auditing"]
-            P4["DB Encryption Check"]
-            P5["Firewall Rules"]
-            P6["Initiative"]
-        end
-        
-        subgraph "Security & Monitoring"
-            AUDIT["Server Auditing<br/>(Extended)"]
-            VULN_SCAN["Vulnerability<br/>Assessment<br/>(Weekly)"]
-            ALERTS["Security Alerts<br/>(Real-time)"]
+        subgraph "Monitoring & Observability"
+            INSIGHTS["Application Insights<br/>Monitoring"]
+            ALERTS["JIT Activity Alerts"]
+            DASHBOARD["Compliance Dashboard"]
         end
     end
     
+    %% JIT Flow
+    USER["👤 Developer<br/>(External)"]
+    USER -->|POST /api/RequestAccess| APIGW
+    APIGW -->|authenticate| AUTH
+    AUTH -->|validate request| VALIDATE
+    VALIDATE -->|get SQL permission| FUNC
+    FUNC -->|invoke| FUNCID
+    FUNCID -->|create firewall rule| FIREWALL
+    FIREWALL -->|opens access for IP<br/>1 hour TTL| SQLSRV
+    
     %% SQL Server Connections
-    SQLSRV -->|encrypted with| SQLDB
+    SQLSRV -->|encrypted| SQLDB
     SQLSRV -->|uses| MANAGED_ID
-    MANAGED_ID -->|accesses| CMK_KEY
-    SQLDB -->|encrypted by| CMK_KEY
-    SQLSRV -->|writes to| AUDIT_LOGS
-    SQLDB -->|audited by| AUDIT
+    SQLDB -->|TDE encrypted| USER
+    SQLSRV -->|logs JIT event| LOGS
     
     %% Network Connectivity
+    SUBNET -->|contains| FUNC
     SUBNET -->|connects to| SQLPE
-    SUBNET -->|connects to| KVPE
     SQLPE -->|resolves via| SQLDNS
-    KVPE -->|resolves via| KVDNS
     SQLPE -->|accesses| SQLSRV
-    KVPE -->|accesses| KEYVAULT
     
-    %% Key Vault Setup
-    KEYVAULT -->|stores| CMK_KEY
-    KEYVAULT -->|protects| SOFT_DELETE
-    KEYVAULT -->|requires| MANAGED_ID
-    
-    %% Storage Connections
-    SQLSRV -->|logs to| STORAGE
-    AUDIT -->|writes to| AUDIT_LOGS
-    VULN_SCAN -->|reports to| VULN_REPORTS
-    STORAGE -->|contains| AUDIT_LOGS
-    STORAGE -->|contains| VULN_REPORTS
-    
-    %% Policy Connections
-    POLICIES -->|enforces| P1
-    POLICIES -->|enforces| P2
-    POLICIES -->|enforces| P3
-    POLICIES -->|enforces| P4
-    POLICIES -->|enforces| P5
-    POLICIES -->|enforces| P6
-    P1 -->|requires| SQLDB
-    P2 -->|requires| KEYVAULT
-    P5 -->|requires| SQLPE
+    %% Storage & Logging
+    FUNC -->|writes| LOGS
+    LOGS -->|audit trail| STORAGE
     
     %% Monitoring
-    SQLSRV -->|monitored by| AUDIT
-    SQLDB -->|scanned by| VULN_SCAN
-    SQLDB -->|alerted by| ALERTS
-    ALERTS -->|notifies| AUDIT_LOGS
+    FUNC -->|telemetry| INSIGHTS
+    INSIGHTS -->|detects anomalies| ALERTS
+    ALERTS -->|displays| DASHBOARD
+    SQLSRV -->|monitored by| INSIGHTS
     
     %% Resource Group Association
     RG -->|contains| SQLSRV
-    RG -->|contains| KEYVAULT
+    RG -->|contains| FUNC
     RG -->|contains| STORAGE
     RG -->|contains| VNET
     
-    style SQLSRV fill:#ff9999
-    style KEYVAULT fill:#ffcc99
-    style STORAGE fill:#99ccff
-    style SQLPE fill:#99ff99
-    style KVPE fill:#99ff99
-    style POLICIES fill:#ffff99
-    style AUDIT fill:#ff99ff
-    style VULN_SCAN fill:#ff99ff
-    style ALERTS fill:#ff99ff
+    style USER fill:#90EE90
+    style FUNC fill:#87CEEB
+    style APIGW fill:#FFB6C1
+    style SQLSRV fill:#FFB347
+    style FIREWALL fill:#FFFF99
+    style STORAGE fill:#DDA0DD
+    style SQLPE fill:#98FB98
+    style INSIGHTS fill:#F0E68C
+    style ALERTS fill:#FFB6B6
+    style DASHBOARD fill:#E0FFFF
 ```
 
 ---
 
-## Data Flow Diagram
+## Data Flow Diagram (JIT Access Request)
 
 ```mermaid
 graph LR
-    USER["User/Application<br/>(VNet)"]
+    USER["👤 Developer/User"]
     
-    USER -->|encrypted connection| SQLPE
-    SQLPE -->|private link| SQLSRV
-    SQLSRV -->|query request| SQLDB
+    USER -->|1. POST /api/RequestAccess| API["Azure Function<br/>(RequestAccess)"]
     
-    SQLDB -->|encrypted data| SQLSRV
-    SQLSRV -->|audit event| AUDIT_LOG["Audit Storage"]
+    API -->|2. Authenticate| MSI["Managed Identity<br/>(Service Principal)"]
+    API -->|3. Validate IP| VAL["Validation Engine<br/>(Check IP format)"]
+    VAL -->|4. Approved| RULE["Create Firewall Rule<br/>(IP-specific)"]
     
-    KEYVAULT["Key Vault"]
-    CMK["CMK Key"]
+    RULE -->|5. Add to SQL| SQLSRV["Azure SQL Server<br/>(Firewall)"]
+    SQLSRV -->|6. Grant Access| SQLDB["SQL Database<br/>(1 Hour TTL)"]
     
-    SQLSRV -->|request key| KEYVAULT
-    KEYVAULT -->|return key| CMK
-    CMK -->|decrypt data| SQLDB
-    SQLDB -->|encrypted data| USER
+    API -->|7. Log Activity| LOGS["Storage Account<br/>(Audit Trail)"]
+    API -->|8. Return Details| USER
     
-    POLICIES["Azure Policies"]
-    MONITOR["Monitoring & Alerts"]
+    USER -->|9. Connect| SQLDB
+    SQLDB -->|10. Encrypted Data| USER
     
-    POLICIES -.->|enforce| SQLSRV
-    SQLDB -.->|monitored by| MONITOR
-    MONITOR -.->|alert on| AUDIT_LOG
+    SCHEDULER["Auto-Cleanup Timer<br/>(Every 5 min)"] -.->|11. Check Expiry| RULE
+    RULE -.->|12. Remove Expired| SQLSRV
     
-    style USER fill:#e1f5ff
-    style SQLPE fill:#c8e6c9
-    style SQLSRV fill:#ffcdd2
-    style SQLDB fill:#ffcdd2
-    style KEYVAULT fill:#fff9c4
-    style CMK fill:#fff9c4
-    style POLICIES fill:#f0f4c3
-    style MONITOR fill:#f8bbd0
+    INSIGHTS["Application Insights"] -.->|Monitors| API
+    INSIGHTS -.->|Logs| LOGS
+    
+    style USER fill:#90EE90
+    style API fill:#87CEEB
+    style SQLSRV fill:#FFB347
+    style SQLDB fill:#FFB6C1
+    style LOGS fill:#DDA0DD
+    style INSIGHTS fill:#F0E68C
+    style SCHEDULER fill:#FFB347
 ```
 
 ---
 
-## Network Isolation Architecture
+## JIT Access Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    JIT ACCESS REQUEST FLOW                      │
+└─────────────────────────────────────────────────────────────────┘
+
+Step 1: User Request
+├─ User runs: curl -X POST https://DOMAIN/api/RequestAccess \
+│             -d '{"ip": "YOUR_IP_ADDRESS"}'
+└─ Function triggered via HTTP
+
+Step 2: Authentication & Validation
+├─ Verify Azure service principal identity
+├─ Validate IP format (ipv4)
+├─ Check authorization level
+└─ Set 1-hour expiration window
+
+Step 3: Create Firewall Rule
+├─ Generate unique rule name: JIT_{GUID}_{TIMESTAMP}
+├─ Add rule to SQL Server firewall
+├─ Rule allows access from User's IP only
+└─ All other IPs still blocked
+
+Step 4: Grant Database Access
+├─ User's IP can now connect to SQL Server
+├─ Connection uses TDE encryption
+├─ Data is encrypted in transit (HTTPS/TLS)
+└─ Activity logged to storage
+
+Step 5: Automatic Cleanup
+├─ Timer checks firewall rules every 5 minutes
+├─ Identifies rules with expired TTL
+├─ Removes expired rules automatically
+└─ User access revoked
+
+Step 6: Audit & Monitoring
+├─ All requests logged to storage account
+├─ Application Insights tracks metrics
+├─ Alerts on suspicious activity
+└─ Compliance dashboard updated
+```
+
+---
+
+## Zero Trust Security Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│            ZERO TRUST SECURITY PRINCIPLES                │
+└──────────────────────────────────────────────────────────┘
+
+Principle 1: Verify Identity
+├─ Service Principal Authentication
+├─ Azure AD Integration
+└─ Managed Identity for Function
+
+Principle 2: Least Privilege Access
+├─ Private Endpoint (No Public Access)
+├─ IP-Specific Firewall Rules
+├─ 1-Hour Access Window
+└─ Automatic Revocation
+
+Principle 3: Protect Data
+├─ Transparent Data Encryption (TDE)
+├─ Encryption in Transit (HTTPS/TLS 1.2)
+└─ GRS Storage for Audit Logs
+
+Principle 4: Monitor & Detect
+├─ Real-time Activity Logging
+├─ Application Insights Telemetry
+├─ Anomaly Detection
+└─ Compliance Alerts
+
+Principle 5: Assume Breach
+├─ All Actions Audited
+├─ Immutable Audit Trail
+├─ User IP Recorded
+└─ Automatic Revocation
+```
+
+---
+
+## Network Architecture (Private Access)
 
 ```mermaid
 graph TB
-    INTERNET["❌ Internet<br/>(Blocked)"]
+    INTERNET["🌐 Internet<br/>(External)"]
     
-    subgraph VNET["Azure VNet<br/>(10.0.0.0/16)"]
-        SUBNET["Private Subnet"]
-        APP["Your Application<br/>(Private)"]
+    subgraph AZURE["Azure Subscription"]
+        subgraph VNET["Virtual Network<br/>(10.0.0.0/16)"]
+            SUBNET["Private Subnet<br/>(10.0.0.0/24)"]
+            FUNC["Azure Function<br/>(RequestAccess)"]
+            APP["Your Applications"]
+        end
+        
+        SQLPE["SQL Private Endpoint<br/>10.0.0.5"]
+        SQLSRV["SQL Server<br/>(No Public IP)"]
+        SQLDB["SQL Database<br/>(sentineldb)"]
+        
+        STORAGE["Storage Account<br/>(Private)"]
+        
+        DNS["Private DNS Zone<br/>database.windows.net"]
     end
     
-    subgraph PRIVATE_SQL["SQL Server<br/>(Private)"]
-        SQLPE["Private Endpoint<br/>⚠️ Cost: $0.35/mo"]
-        SQLSRV["SQL Server<br/>No Public IP<br/>⚠️ Cost: $15/mo"]
-    end
-    
-    subgraph PRIVATE_KV["Key Vault<br/>(Private)"]
-        KVPE["Private Endpoint<br/>⚠️ Cost: $0.35/mo"]
-        KEYVAULT["Key Vault<br/>No Public IP<br/>⚠️ Cost: $28/mo"]
-    end
-    
-    subgraph PRIVATE_STORAGE["Storage<br/>(Private)"]
-        STORAGE["Storage Account<br/>HTTPS Only<br/>⚠️ Cost: $10/mo"]
-    end
-    
-    INTERNET -->|❌ DENIED| SQLPE
-    INTERNET -->|❌ DENIED| KVPE
+    INTERNET -->|❌ DENIED| SQLSRV
     INTERNET -->|❌ DENIED| STORAGE
     
-    APP -->|✅ Private Link| SQLPE
-    SQLPE -->|Private Connection| SQLSRV
+    FUNC -->|Private Link| SQLPE
+    SQLPE -->|Secure Connection| SQLSRV
+    SQLSRV -->|Manages| SQLDB
     
-    APP -->|✅ Private Link| KVPE
-    KVPE -->|Private Connection| KEYVAULT
+    APP -->|Query Data| SQLDB
     
-    SQLSRV -->|✅ Service Access| STORAGE
-    KEYVAULT -->|Managed Identity| SQLSRV
+    SQLSRV -->|Logs To| STORAGE
+    FUNC -->|Logs To| STORAGE
     
-    SUBNET -->|DNS Resolution| PDNS1["Private DNS<br/>privatelink.database.windows.net<br/>Free"]
-    SUBNET -->|DNS Resolution| PDNS2["Private DNS<br/>privatelink.vaultcore.azure.net<br/>Free"]
+    SUBNET -->|DNS Resolution| DNS
+    DNS -->|Maps to| SQLPE
     
-    style INTERNET fill:#ffcdd2
-    style SQLPE fill:#c8e6c9
-    style KVPE fill:#c8e6c9
-    style SQLSRV fill:#ffcdd2
-    style KEYVAULT fill:#fff9c4
-    style STORAGE fill:#bbdefb
-    style APP fill:#c8e6c9
-    style PDNS1 fill:#e1bee7
-    style PDNS2 fill:#e1bee7
+    style INTERNET fill:#FFB6B6
+    style FUNC fill:#87CEEB
+    style SQLPE fill:#90EE90
+    style SQLSRV fill:#FFB347
+    style SQLDB fill:#FFB6C1
+    style STORAGE fill:#DDA0DD
+    style DNS fill:#F0E68C
+    style VNET fill:#E0FFFF
 ```
 
 ---
 
-## Encryption Layers
+## Cost Breakdown
 
-```mermaid
-graph TB
-    subgraph "Data Protection Layers"
-        L1["Layer 1: Network<br/>━━━━━━━━━━━━━<br/>Private Endpoints<br/>No Public Access<br/>HTTPS/TLS 1.2 Minimum"]
-        
-        L2["Layer 2: Data at Rest<br/>━━━━━━━━━━━━━<br/>TDE Encryption<br/>AES-256<br/>Service-Managed or CMK"]
-        
-        L3["Layer 3: Key Management<br/>━━━━━━━━━━━━━<br/>Azure Key Vault<br/>Premium SKU<br/>Soft Delete 90 days"]
-        
-        L4["Layer 4: Auditing<br/>━━━━━━━━━━━━━<br/>Server Auditing<br/>Database Auditing<br/>Retention 30+ days"]
-        
-        L5["Layer 5: Monitoring<br/>━━━━━━━━━━━━━<br/>Vulnerability Scans<br/>Security Alerts<br/>Azure Policies"]
-    end
-    
-    L1 --> L2
-    L2 --> L3
-    L3 --> L4
-    L4 --> L5
-    
-    style L1 fill:#bbdefb
-    style L2 fill:#ffcdd2
-    style L3 fill:#fff9c4
-    style L4 fill:#f8bbd0
-    style L5 fill:#c8e6c9
+| Component | Cost/Month | Purpose |
+|-----------|-----------|---------|
+| Azure SQL Server | $15 | Database engine (serverless) |
+| Azure SQL Database | ~$10 | Data storage (included) |
+| Azure Function | $0-5 | JIT logic (consumption plan) |
+| Storage Account | $5 | Audit logs (minimal storage) |
+| Private Endpoint | $0.35 | SQL secure access |
+| **Total Monthly** | **~$30-35** | Full JIT system |
+
+---
+
+## Key Components Summary
+
+### 1. **Azure Function (RequestAccess)**
+- **Language**: C# .NET 8 (Isolated)
+- **Trigger**: HTTP POST
+- **Purpose**: Accept JIT access requests and create firewall rules
+- **Identity**: Managed Identity for SQL Server access
+- **Cost**: Serverless (pay per invocation)
+
+### 2. **Azure SQL Server**
+- **Access**: Private endpoint only (no public access)
+- **Encryption**: Transparent Data Encryption (TDE)
+- **Firewall**: Dynamic rules managed by Function
+- **Default State**: All access denied
+- **Cost**: $15/month (serverless compute)
+
+### 3. **Azure SQL Database**
+- **Name**: sentineldb
+- **Encryption**: TDE encrypted at rest
+- **Storage**: GRS (Geo-Redundant)
+- **Backup**: Automatic daily snapshots
+- **Cost**: Included with SQL Server
+
+### 4. **Storage Account**
+- **Purpose**: Audit logs and compliance records
+- **Access**: Private (no public access)
+- **Containers**:
+  - `jit-access-logs`: Request history
+  - `audit-logs`: Activity records
+- **Cost**: $5-10/month
+
+### 5. **Application Insights**
+- **Monitoring**: Function execution metrics
+- **Alerts**: Suspicious activity detection
+- **Dashboard**: Real-time visibility
+- **Cost**: Included in Function cost
+
+### 6. **Managed Identity**
+- **Type**: System-Assigned (built-in)
+- **Purpose**: Secure authentication to SQL Server
+- **RBAC**: Fine-grained access control
+- **Cost**: FREE
+
+---
+
+## How to Use This Diagram
+
+### In GitHub
+Mermaid diagrams render automatically in GitHub markdown files.
+
+### In VS Code
+1. Install: "Markdown Preview Mermaid Support"
+2. Open preview: `Ctrl+Shift+V`
+3. View rendered diagrams
+
+### Online
+Paste any mermaid code at: https://mermaid.live
+
+---
+
+## Deployment Order
+
 ```
-
----
-
-## Cost Analysis: Resource Dependencies
-
-```mermaid
-graph TD
-    subgraph "Always-On Costs"
-        SQL["SQL Server<br/>$15/month<br/>🔴 ALWAYS CREATED"]
-        STORAGE["Storage Account<br/>$10/month<br/>🔴 ALWAYS CREATED"]
-        PE1["Private Endpoint SQL<br/>$0.35/month<br/>🔴 ALWAYS CREATED"]
-    end
-    
-    subgraph "Conditional Costs"
-        KEYVAULT["Key Vault<br/>$28/month<br/>🟡 ONLY IF CMK ENABLED"]
-        PE2["Private Endpoint KV<br/>$0.35/month<br/>🟡 ONLY IF CMK ENABLED"]
-    end
-    
-    subgraph "Zero-Cost Resources"
-        POLICIES["Azure Policies<br/>$0/month<br/>✅ FREE"]
-        PDNS["Private DNS<br/>$0/month<br/>✅ FREE"]
-        MANAGED_ID["Managed Identity<br/>$0/month<br/>✅ FREE"]
-        AUDIT["Auditing<br/>$0/month<br/>✅ FREE"]
-        VULN["Vulnerability Scan<br/>$0/month<br/>✅ FREE"]
-    end
-    
-    TOTAL1["Total Without CMK<br/>$25.70/month"]
-    TOTAL2["Total With CMK<br/>$54.00/month"]
-    
-    SQL --> TOTAL1
-    STORAGE --> TOTAL1
-    PE1 --> TOTAL1
-    
-    SQL --> TOTAL2
-    STORAGE --> TOTAL2
-    PE1 --> TOTAL2
-    KEYVAULT --> TOTAL2
-    PE2 --> TOTAL2
-    
-    style SQL fill:#ff9999
-    style STORAGE fill:#ff9999
-    style PE1 fill:#ff9999
-    style KEYVAULT fill:#ffcc99
-    style PE2 fill:#ffcc99
-    style POLICIES fill:#99ff99
-    style PDNS fill:#99ff99
-    style MANAGED_ID fill:#99ff99
-    style AUDIT fill:#99ff99
-    style VULN fill:#99ff99
-    style TOTAL1 fill:#ffe0b2
-    style TOTAL2 fill:#ffe0b2
+1. Create Resource Group
+2. Create Virtual Network & Subnet
+3. Create Managed Identity
+4. Create SQL Server (with Managed Identity)
+5. Create SQL Database
+6. Create Private Endpoint (SQL)
+7. Create Private DNS Zone
+8. Create Storage Account
+9. Configure Auditing
+10. Deploy Azure Function
+11. Create Function Managed Identity
+12. Grant Function permissions to SQL
+13. Configure Application Insights
+14. Deploy monitoring alerts
 ```
-
----
-
-## Deployment Sequence
-
-```mermaid
-sequenceDiagram
-    participant Terraform
-    participant RG as Resource Group
-    participant VNET as Virtual Network
-    participant SQL as SQL Server
-    participant STORAGE as Storage Account
-    participant KV as Key Vault
-    participant POLICY as Azure Policy
-
-    Terraform->>RG: Create Resource Group
-    Terraform->>VNET: Create Virtual Network & Subnet
-    Terraform->>SQL: Create SQL Server (Managed Identity)
-    Terraform->>SQL: Create SQL Database
-    Terraform->>STORAGE: Create Storage Account (GRS)
-    Terraform->>STORAGE: Create Audit Containers
-    Terraform->>SQL: Enable TDE
-    Terraform->>SQL: Create Private Endpoint
-    
-    alt if enable_cmk_encryption = true
-        Terraform->>KV: Create Key Vault (Premium)
-        Terraform->>KV: Create CMK Key
-        Terraform->>SQL: Link SQL to CMK
-        Terraform->>KV: Create Private Endpoint
-    else
-        Note over KV: ⚠️ Key Vault still created!
-    end
-    
-    Terraform->>POLICY: Assign TDE Policy
-    Terraform->>POLICY: Assign Encryption Policies
-    Terraform->>POLICY: Assign Firewall Policy
-    
-    SQL->>STORAGE: Configure Audit Logging
-    SQL->>STORAGE: Configure Vulnerability Assessment
-```
-
----
-
-## How to View These Diagrams
-
-### Option 1: GitHub (Automatically Renders)
-If you push this file to GitHub, Mermaid diagrams render automatically in the README.
-
-### Option 2: Online Editor
-Paste any diagram code into: https://mermaid.live
-
-### Option 3: VS Code Extension
-Install "Markdown Preview Mermaid Support" extension:
-- Cmd: `ext install markdown-mermaid`
-- View in preview pane (Ctrl+Shift+V)
-
-### Option 4: Convert to PNG/SVG
-```bash
-npm install -g mermaid-cli
-mmdc -i ARCHITECTURE_DIAGRAM.md -o architecture.png
-```
-
----
-
-## Resource Summary Table
-
-| Resource | Type | Cost/Month | Always Created? | Purpose |
-|----------|------|-----------|---|---------|
-| SQL Server | azurerm_mssql_server | $15 | ✅ Yes | Database engine |
-| SQL Database | azurerm_mssql_database | Included | ✅ Yes | Data storage |
-| Storage Account | azurerm_storage_account | $10 | ✅ Yes | Audit logs, reports |
-| Key Vault | azurerm_key_vault | $28 | 🟡 CMK only | CMK storage |
-| Private Endpoint (SQL) | azurerm_private_endpoint | $0.35 | ✅ Yes | Secure SQL access |
-| Private Endpoint (KV) | azurerm_private_endpoint | $0.35 | 🟡 CMK only | Secure KV access |
-| Private DNS Zone (SQL) | azurerm_private_dns_zone | FREE | ✅ Yes | DNS resolution |
-| Private DNS Zone (KV) | azurerm_private_dns_zone | FREE | 🟡 CMK only | DNS resolution |
-| Managed Identity | SystemAssigned | FREE | ✅ Yes | SQL authentication |
-| Azure Policies | subscription_policy_assignment | FREE | ✅ Yes | Compliance enforcement |
-| Auditing | extended_auditing_policy | FREE | ✅ Yes | Logging |
-| Vulnerability Assessment | vulnerability_assessment | FREE | ✅ Yes | Security scans |
-| Security Alerts | (via auditing) | FREE | ✅ Yes | Threat detection |
-
----
-
-## Key Insights
-
-### 🔴 Cost Reality Check
-- **Minimum Cost**: $25.70/month (without CMK)
-- **Full Cost**: $54.00/month (with CMK)
-- **These costs are ALWAYS charged**, even if resources sit idle
-
-### 🟡 Key Vault Problem
-- **Always created** even when `enable_cmk_encryption = false`
-- **Charges $28/month** whether used or not
-- **Solution**: Wrap Key Vault in a conditional (`count` variable)
-
-### ✅ No Hidden Costs
-- Azure Policies: Free
-- Private DNS: Free  
-- Managed Identity: Free
-- Auditing: Free
-- Vulnerability Scans: Free
-
-### 🎯 Optimization Recommendations
-1. **For non-production**: Skip CMK (`enable_cmk_encryption = false`)
-2. **For development**: Destroy when not in use
-3. **For production**: Accept the cost for compliance
 

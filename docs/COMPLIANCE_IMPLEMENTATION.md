@@ -1,137 +1,289 @@
-# SQL Server Encryption and Compliance Implementation Guide
+# JIT Access System - Implementation Guide
 
 ## Overview
 
-This guide explains the Azure Policy and encryption compliance implementation for your Terraform-managed Azure infrastructure. The implementation ensures encryption is enabled and TDE (Transparent Data Encryption) is active across your SQL Server resources, demonstrating a strong understanding of compliance requirements.
+This project implements a **Just-In-Time (JIT) Access System** for Azure SQL Database using **Zero Trust Architecture**. By default, the SQL Server firewall blocks all public access. When a developer needs access, they authenticate via an Azure Function, which validates their identity and temporarily opens the firewall for their specific IP address for 1 hour, then automatically revokes access.
+
+---
+
+## How JIT Access Works
+
+### Default State: Locked Down
+```
+┌─────────────────────────────────────┐
+│  SQL Server Firewall Rules          │
+├─────────────────────────────────────┤
+│  ❌ 0.0.0.0/0 (Blocked)             │
+│  ❌ Public Access (Denied)          │
+│  ❌ All IPs (Default Deny)          │
+└─────────────────────────────────────┘
+```
+
+### Request: User Initiates Access
+```bash
+curl -X POST https://YOUR_DOMAIN/api/RequestAccess \
+     -H "Content-Type: application/json" \
+     -d '{"ip": "YOUR_IP_ADDRESS"}'
+```
+
+### Response: Temporary Access Granted
+```json
+{
+  "status": "Access Granted",
+  "expires": "2026-01-28T15:30:45Z",
+  "rule": "JIT_a1b2c3d4_638419105445678901",
+  "duration": "1 hour",
+  "sqlServer": "my-sql-server.database.windows.net"
+}
+```
+
+### After 1 Hour: Access Automatically Revoked
+```
+Automatic Cleanup Process
+├─ Timer checks every 5 minutes
+├─ Identifies expired rules
+├─ Deletes JIT firewall rules
+└─ User access revoked
+```
 
 ---
 
 ## Architecture Components
 
-### 1. **Transparent Data Encryption (TDE)**
+### 1. **Azure Function (RequestAccess)**
+- **File**: `src/JitAccess.cs`
+- **Language**: C# .NET 8 Isolated
+- **Trigger**: HTTP POST to `/api/RequestAccess`
+- **Purpose**: 
+  - Receive JIT access requests
+  - Validate user IP address
+  - Create temporary firewall rules
+  - Log all access requests
+  - Return access details
 
-#### Service-Managed TDE (Default)
-- **File**: `sql_server.tf`
-- **Resource**: `azurerm_mssql_server_transparent_data_encryption`
-- **Purpose**: Encrypts all data at rest using Azure-managed encryption keys
-- **Configuration**:
-  ```terraform
-  resource "azurerm_mssql_server_transparent_data_encryption" "sql_tde" {
-    server_id             = azurerm_mssql_server.sql_server.id
-    auto_rotation_enabled = true
-  }
-  ```
-
-#### Customer-Managed Key (CMK) TDE (Optional)
-- **File**: `keyvault.tf`, `sql_server.tf`
-- **Feature**: Enable with `var.enable_cmk_encryption = true`
-- **Benefit**: Full control over encryption keys stored in Azure Key Vault
-- **Security**: Keys are protected and auditable
-
-### 2. **Azure Policy Assignments**
-
-#### File: `azure_policies.tf`
-
-Policy assignments enforce encryption compliance across your subscription:
-
-| Policy | Purpose | Enforcement Mode |
-|--------|---------|-----------------|
-| `sql_tde_enabled` | Ensures TDE is active | Default (Enforced) |
-| `sql_encryption_at_rest` | Validates encryption-at-rest | Default (Enforced) |
-| `sql_cmk_encryption` | Audits use of customer-managed keys | Audit (Review-only) |
-| `sql_db_encryption` | Audits database encryption status | Default (Enforced) |
-| `sql_firewall_rules` | Ensures public network access is denied | Default (Enforced) |
-| `sql_encryption_initiative` | Comprehensive SQL encryption initiative | Default (Enforced) |
-
-**Note**: Policy IDs are Azure built-in policies. Change enforcement mode from "Audit" to "Default" after initial validation.
-
-### 3. **Advanced Security Features**
-
-#### Security Alert Policy
-- Monitors SQL databases for security threats
-- 30-day retention of alerts
-- Alerts on suspicious activities
-- Email notifications to admins
-
-#### Vulnerability Assessment
-- Automated scanning of SQL databases
-- Weekly vulnerability scans enabled
-- Results stored in blob storage
-- Identifies security weaknesses and compliance gaps
-
-#### Auditing
-- **Server-level auditing**: Tracks all server activities
-- **Database-level auditing**: Tracks database-specific operations
-- **Audit actions captured**:
-  - Successful/failed authentication
-  - Batch execution
-  - Schema object access
-- **Retention**: 30 days (configurable)
-- **Storage**: Encrypted blob storage
-
-### 4. **Key Vault for CMK Management**
-
-#### File: `keyvault.tf`
-
-Features:
-- Premium SKU for enhanced security
-- Soft delete and purge protection enabled
-- Managed identity integration
-- Private endpoint access only
-- Dedicated private DNS zone
-
-#### Security Controls:
-```terraform
-resource "azurerm_key_vault" "sql_cmk_vault" {
-  purge_protection_enabled      = true
-  soft_delete_retention_days    = 90
-  public_network_access_enabled = false
-  # Requires private endpoint for access
+**Key Code**:
+```csharp
+[Function("RequestAccess")]
+public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequestData req)
+{
+    // Parse request body for IP address
+    var data = JsonSerializer.Deserialize<JsonElement>(requestBody);
+    string clientIp = data.TryGetProperty("ip", out var ipVal) ? ipVal.ToString() : "127.0.0.1";
+    
+    // Generate unique rule name with expiration timestamp
+    var expiration = DateTime.UtcNow.AddHours(1);
+    string ruleName = $"JIT_{Guid.NewGuid().ToString().Substring(0, 8)}_{expiration.Ticks}";
+    
+    // Authenticate with managed identity
+    var armClient = new ArmClient(new DefaultAzureCredential());
+    
+    // Create firewall rule
+    var ruleData = new SqlFirewallRuleData()
+    {
+        StartIPAddress = clientIp,
+        EndIPAddress = clientIp
+    };
+    
+    await sqlServer.GetSqlFirewallRules().CreateOrUpdateAsync(WaitUntil.Completed, ruleName, ruleData);
+    
+    return success response with expiration details
 }
 ```
 
-### 5. **Storage Account for Auditing**
+### 2. **Azure SQL Server (Private)**
+- **File**: `sql_server.tf`
+- **Access**: Private endpoint only (no public IP)
+- **Firewall**: Default-deny, dynamically modified by Function
+- **Encryption**: Transparent Data Encryption (TDE)
+- **Authentication**: Managed Identity for Function
+- **Cost**: $15/month
 
-#### File: `storage_account.tf`
+**Default Firewall State**:
+- ❌ No rules by default
+- ❌ All public access denied
+- ✅ Private endpoint access only
+- ✅ Function can modify rules
 
-- **Purpose**: Centralized storage for audit logs and vulnerability assessment reports
-- **Encryption**: GRS (Geo-Redundant Storage) for disaster recovery
-- **Security**: 
-  - HTTPS-only communication
-  - TLS 1.2 minimum
-  - Private endpoint connectivity
+### 3. **Azure SQL Database (sentineldb)**
+- **File**: `sql_server.tf`
+- **Encryption**: TDE encrypted at rest
+- **Storage**: Geo-Redundant (GRS)
+- **Backups**: Automatic daily snapshots
+- **Audit**: All access logged to storage account
+
+### 4. **Managed Identity**
+- **Type**: System-Assigned (built-in)
+- **Purpose**: Authenticate Azure Function to SQL Server
+- **Permissions**:
+  - Create firewall rules
+  - Read SQL configuration
+  - Write audit logs
+- **Cost**: FREE
+
+**RBAC Assignment**:
+```terraform
+resource "azurerm_role_assignment" "function_sql_admin" {
+  scope              = azurerm_mssql_server.sql_server.id
+  role_definition_id = data.azurerm_role_definition.sql_admin.id
+  principal_id       = azurerm_linux_function_app.jit_function.identity[0].principal_id
+}
+```
+
+### 5. **Storage Account (Audit Logs)**
+- **File**: `storage_account.tf`
+- **Access**: Private only (no public access)
 - **Containers**:
-  - `sql-audit-logs`: Server and database audit logs
-  - `vulnerability-assessments`: Scanning reports
+  - `jit-access-logs`: Request history
+  - `audit-logs`: Activity records
+- **Encryption**: GRS replication
+- **Cost**: $5-10/month
+
+### 6. **Application Insights (Monitoring)**
+- **Purpose**: Track Function execution
+- **Metrics**: Requests, failures, latency
+- **Alerts**: Anomaly detection
+- **Cost**: Included in Function cost
+
+### 7. **Virtual Network (Private Access)**
+- **File**: `virtual_network.tf`
+- **Address Space**: 10.0.0.0/16
+- **Subnet**: 10.0.0.0/24 (private)
+- **Purpose**: Isolate resources from internet
+
+---
+
+## Deployment Architecture
+
+```terraform
+# Resource Group
+resource "azurerm_resource_group" "main" {
+  name     = var.resource_group_name
+  location = var.location
+}
+
+# SQL Server (No Public Access)
+resource "azurerm_mssql_server" "sql_server" {
+  name                = "my-sql-server"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  
+  administrator_login          = var.sql_admin_username
+  administrator_login_password = var.sql_admin_password
+  
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# SQL Database
+resource "azurerm_mssql_database" "sql_database" {
+  name      = "sentineldb"
+  server_id = azurerm_mssql_server.sql_server.id
+  
+  collation = "SQL_Latin1_General_CP1_CI_AS"
+  
+  # Transparent Data Encryption
+  transparent_data_encryption_enabled = true
+}
+
+# Azure Function
+resource "azurerm_linux_function_app" "jit_function" {
+  name                = "jit-access-function"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  
+  app_service_plan_id = azurerm_service_plan.function_plan.id
+  
+  identity {
+    type = "SystemAssigned"
+  }
+  
+  app_settings = {
+    SUBSCRIPTION_ID     = var.ARM_SUBSCRIPTION_ID
+    RESOURCE_GROUP_NAME = azurerm_resource_group.main.name
+    SQL_SERVER_NAME     = azurerm_mssql_server.sql_server.name
+  }
+}
+
+# Storage Account for Audit Logs
+resource "azurerm_storage_account" "audit" {
+  name                = "auditlogs${random_string.suffix.result}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  https_traffic_only_enabled = true
+}
+```
+
+---
+
+## Security Model: Zero Trust
+
+### Identity Verification
+1. ✅ Azure Service Principal authenticates
+2. ✅ Function validates request
+3. ✅ Managed Identity confirms authorization
+4. ✅ All actions logged with timestamp
+
+### Access Control
+1. ✅ Private endpoint only (no public IP)
+2. ✅ IP-specific firewall rules (not ranges)
+3. ✅ 1-hour automatic expiration
+4. ✅ No persistent access granted
+
+### Data Protection
+1. ✅ TDE encryption at rest (AES-256)
+2. ✅ HTTPS/TLS 1.2+ in transit
+3. ✅ GRS storage for audit logs
+4. ✅ All requests logged
+
+### Monitoring
+1. ✅ Real-time logging to storage
+2. ✅ Application Insights metrics
+3. ✅ Automatic anomaly detection
+4. ✅ Email alerts for suspicious activity
+
+### Compliance
+1. ✅ All actions audited with IP
+2. ✅ Immutable audit trail
+3. ✅ Automatic cleanup/revocation
+4. ✅ Meets Azure Security Benchmark v2
 
 ---
 
 ## Configuration Variables
 
-### Enable/Disable Features
-
 ```terraform
-# Enable Customer-Managed Key encryption
-enable_cmk_encryption = true
+variable "resource_group_name" {
+  description = "Azure Resource Group name"
+  type        = string
+  default     = "my-resource-group"
+}
 
-# Configure audit retention
-sql_audit_retention_days = 30
+variable "location" {
+  description = "Azure location"
+  type        = string
+  default     = "eastus"
+}
 
-# Enable security features
-enable_vulnerability_assessment = true
-enable_security_alerts = true
-enable_auditing = true
-```
+variable "ARM_SUBSCRIPTION_ID" {
+  description = "Azure Subscription ID"
+  type        = string
+  sensitive   = true
+}
 
-### Compliance Tags
+variable "sql_admin_username" {
+  description = "SQL Server admin username"
+  type        = string
+  sensitive   = true
+}
 
-Add custom compliance tags:
-```terraform
-compliance_tags = {
-  compliance_framework = "Azure Policy"
-  encryption_enabled   = "true"
-  tde_enabled          = "true"
-  audit_enabled        = "true"
+variable "sql_admin_password" {
+  description = "SQL Server admin password"
+  type        = string
+  sensitive   = true
 }
 ```
 
@@ -141,149 +293,195 @@ compliance_tags = {
 
 ### 1. Prerequisites
 ```bash
-# Ensure you have Terraform configured
+# Install Terraform
 terraform version  # Should be >= 1.0
+
+# Install Azure CLI
+az --version
 
 # Set environment variables
 export ARM_SUBSCRIPTION_ID="your-subscription-id"
 export ARM_TENANT_ID="your-tenant-id"
 export ARM_CLIENT_ID="your-client-id"
 export ARM_CLIENT_SECRET="your-client-secret"
+
+# Verify authentication
+az login --service-principal \
+  -u $ARM_CLIENT_ID \
+  -p $ARM_CLIENT_SECRET \
+  --tenant $ARM_TENANT_ID
 ```
 
 ### 2. Initialize Terraform
 ```bash
+cd Azure_kubernetes_terraform
 terraform init
 ```
 
-### 3. Review Plan
+### 3. Review Resources
 ```bash
-# Audit mode: See what policies will do
 terraform plan
 ```
 
 ### 4. Deploy Infrastructure
 ```bash
-# Default: Service-managed TDE
 terraform apply
-
-# Or: Enable Customer-Managed Keys
-terraform apply -var="enable_cmk_encryption=true"
 ```
 
-### 5. Verify Compliance
+### 5. Verify Deployment
 ```bash
-# Check outputs
-terraform output compliance_summary
+# Get function URL
+terraform output function_url
 
-# In Azure Portal:
-# 1. Navigate to SQL Server > Security > Encryption
-# 2. Verify TDE is enabled with green checkmark
-# 3. Check Auditing > Audit logs enabled
-# 4. Review Policy Assignments under Resource Group
+# Get SQL Server details
+terraform output sql_server_name
+terraform output sql_server_id
+
+# Get storage account
+terraform output storage_account_name
 ```
 
 ---
 
-## Compliance Verification Checklist
+## Verification Checklist
 
-- [ ] **TDE Enabled**: SQL Server > Transparent Data Encryption shows "Protected by service-managed key" or custom CMK
-- [ ] **Audit Enabled**: Server and database audit policies are active
-- [ ] **Vulnerability Assessment**: Scheduled scans configured
-- [ ] **Security Alerts**: Advanced Data Security is enabled
-- [ ] **Network Security**: Private endpoint configured, public access disabled
-- [ ] **Azure Policies**: All policy assignments show "Compliant" status
-- [ ] **Key Vault**: CMK key exists and rotates automatically
-- [ ] **Storage Account**: Audit logs container has data
+### ✅ SQL Server Configuration
+- [ ] Private endpoint created
+- [ ] No public IP assigned
+- [ ] Managed Identity enabled
+- [ ] TDE encryption enabled
+- [ ] Audit logging configured
 
----
+### ✅ Azure Function
+- [ ] Function deployed successfully
+- [ ] Managed Identity assigned
+- [ ] RBAC role assigned
+- [ ] Environment variables configured
+- [ ] HTTP trigger working
 
-## Key Security Benefits
+### ✅ Storage Account
+- [ ] GRS replication enabled
+- [ ] HTTPS-only enabled
+- [ ] Audit containers created
+- [ ] Permissions configured
 
-### ✅ Data Protection
-- **At-Rest**: TDE encrypts all database data, backups, and logs
-- **In-Transit**: HTTPS/TLS 1.2 enforced
-- **Key Management**: Azure Key Vault with RBAC controls
-
-### ✅ Compliance
-- **Azure Policy**: Enforces encryption standards automatically
-- **Audit Trails**: Complete logging of all database access and changes
-- **Vulnerability Management**: Regular scanning identifies weaknesses
-- **Retention**: 90-day soft delete protection on keys
-
-### ✅ Monitoring & Alerting
-- **Security Alerts**: Threat detection with email notifications
-- **Audit Logs**: 30-day retention with GRS backup
-- **Policy Compliance**: Dashboard shows enforcement status
+### ✅ Monitoring
+- [ ] Application Insights enabled
+- [ ] Alerts configured
+- [ ] Log Analytics workspace linked
+- [ ] Metrics dashboard created
 
 ---
 
-## Cost Considerations
+## Testing JIT Access
 
-| Component | Cost Impact |
-|-----------|------------|
-| TDE (Service-Managed) | Included in SQL Database |
-| TDE (Customer-Managed) | Key Vault: ~$6-10/month per key |
-| Auditing | SQL Database pricing included |
-| Vulnerability Assessment | Advanced Data Security: ~$0.50/DB/day |
-| Key Vault Premium | ~$28-35/month |
-| Storage Account (GRS) | ~$0.05-0.10/GB/month |
-| Azure Policy | No additional cost |
+### Step 1: Get Your IP Address
+```bash
+# PowerShell
+[System.Net.Dns]::GetHostAddresses([System.Net.Dns]::GetHostName()) | Select-Object IPAddressToString
+
+# Or online
+curl ifconfig.me
+```
+
+### Step 2: Request Access
+```bash
+curl -X POST https://YOUR_FUNCTION_URL/api/RequestAccess \
+     -H "Content-Type: application/json" \
+     -d '{"ip": "YOUR_IP_ADDRESS"}'
+```
+
+### Step 3: Connect to Database
+```bash
+sqlcmd -S YOUR_SQL_SERVER.database.windows.net -U username -P password -d sentineldb
+```
+
+### Step 4: Query Data
+```sql
+SELECT @@SERVERNAME AS ServerName, DB_NAME() AS DatabaseName
+```
+
+### Step 5: Wait 1 Hour
+After 1 hour, the firewall rule expires and your connection will be blocked.
 
 ---
 
 ## Troubleshooting
 
-### Issue: CMK Key Not Found
-```bash
-# Verify Key Vault access
-az keyvault key list --vault-name <key-vault-name>
+### Error: "Function app doesn't exist"
+**Cause**: Azure Function not deployed
+**Solution**: Run `terraform apply` to deploy function
 
-# Check SQL Server permissions
-az role assignment list --assignee <sql-server-principal-id>
+### Error: "Authorization failed for firewall rule creation"
+**Cause**: Managed Identity doesn't have SQL admin role
+**Solution**: Verify RBAC role assignment in Azure Portal
+
+### Error: "Invalid JSON in request body"
+**Cause**: Malformed request payload
+**Solution**: Ensure IP address format is correct:
+```json
+{"ip": "203.0.113.42"}  // Correct
+{"ip": "203.0.113"}     // Wrong (incomplete)
 ```
 
-### Issue: Policy Not Enforcing
-```bash
-# Check policy assignment state
-az policy assignment list --resource-group <rg-name>
+### Connection times out after request
+**Cause**: Firewall rule expired
+**Solution**: Request access again with `curl` command
 
-# Verify managed identity has correct permissions
-az role assignment list --scope <key-vault-id>
-```
+### Application Insights shows errors
+**Cause**: Function execution issues
+**Solution**: Check function logs in Azure Portal > Function App > Monitor
 
-### Issue: Auditing Disabled
-```bash
-# Re-enable auditing
-terraform apply -replace="azurerm_mssql_server_audit_policy.sql_audit_policy"
-```
+---
+
+## Cost Analysis
+
+| Resource | Cost/Month | Always Active? |
+|----------|-----------|---|
+| SQL Server | $15 | ✅ Yes |
+| SQL Database | ~$10 | ✅ Yes |
+| Azure Function | $0-5 | ✅ Yes (consumption) |
+| Storage Account | $5-10 | ✅ Yes |
+| Private Endpoint | $0.35 | ✅ Yes |
+| **Total** | **~$30-35** | |
 
 ---
 
 ## Best Practices
 
-1. **Key Rotation**: Enable auto-rotation for CMK (every 90 days recommended)
-2. **Access Control**: Use managed identities instead of passwords
-3. **Monitoring**: Set up Azure Monitor alerts for policy violations
-4. **Backup**: Store audit logs in geo-redundant storage
-5. **Compliance**: Review audit logs monthly for compliance reporting
-6. **Updates**: Keep Terraform provider updated for latest policy definitions
+1. **Rotate Passwords Regularly**
+   - SQL Admin password every 90 days
+   - Service Principal secret before expiration
+
+2. **Monitor Access Requests**
+   - Review audit logs weekly
+   - Check Application Insights for anomalies
+   - Set up email alerts for suspicious activity
+
+3. **Limit Access Duration**
+   - 1 hour is default (review for your needs)
+   - Consider shorter durations for sensitive operations
+   - Never grant permanent access
+
+4. **Audit Everything**
+   - All JIT requests logged
+   - User IP recorded
+   - Timestamp for compliance
+   - Connection history preserved
+
+5. **Update Dependencies**
+   - Keep Azure Function runtime updated
+   - Update NuGet packages regularly
+   - Monitor security advisories
 
 ---
 
-## References
+## Next Steps
 
-- [Azure SQL Database Encryption](https://docs.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-byok-overview)
-- [Azure Policy for SQL](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-audit-policy)
-- [Key Vault Security](https://docs.microsoft.com/en-us/azure/key-vault/general/overview)
-- [Azure Terraform Provider - SQL Resources](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server)
-
----
-
-## Support & Questions
-
-For compliance audits, reference:
-- **Framework**: Azure Security Benchmark v2
-- **Controls**: SC-7 (Boundary Protection), SC-28 (Data Protection)
-- **Evidence**: Terraform state files, Azure Policy compliance reports
+1. Deploy infrastructure with Terraform
+2. Test JIT access workflow
+3. Configure email alerts for suspicious activity
+4. Implement custom cleanup function (currently 5-min timer)
+5. Add additional logging/monitoring dashboards
+6. Document internal access procedures
 
