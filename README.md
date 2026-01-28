@@ -272,6 +272,7 @@ External User
 - **How does it work?** → [ARCHITECTURE_DIAGRAM.md](docs/architecture/ARCHITECTURE_DIAGRAM.md)
 - **Full details?** → [COMPLIANCE_IMPLEMENTATION.md](docs/implementation/COMPLIANCE_IMPLEMENTATION.md)
 - **What was built?** → [IMPLEMENTATION_SUMMARY.md](docs/implementation/IMPLEMENTATION_SUMMARY.md)
+- **Common questions** → [FAQ.md](docs/FAQ.md)
 - **All docs?** → [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
 
 ### Documentation Time Investment
