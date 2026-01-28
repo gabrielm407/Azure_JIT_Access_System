@@ -143,7 +143,12 @@ resource "azurerm_linux_function_app" "jit_function" {
       use_dotnet_isolated_runtime = true
     }
     always_on = false
+    cors {
+      allowed_origins = ["https://portal.azure.com"] # Allows communication through the Azure Portal
+      support_credentials = true
+    }
   }
+  
 
   identity {
     type = "SystemAssigned"
