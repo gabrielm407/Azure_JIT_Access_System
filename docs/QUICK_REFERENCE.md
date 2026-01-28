@@ -428,9 +428,9 @@ terraform destroy
 
 ## 📚 Related Documentation
 
-- **Full Architecture**: See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-- **Implementation Details**: See [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- **Deployment Steps**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- **Full Architecture**: See [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)
+- **Implementation Details**: See [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- **Deployment Steps**: See [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
 - **All Documentation**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 
 ---
@@ -442,12 +442,12 @@ terraform destroy
 2. See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for index
 
 ### For Deployment Issues
-1. See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+1. See [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
 2. Check troubleshooting section above
 
 ### For Architecture Questions
-1. See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-2. Read [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
+1. See [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)
+2. Read [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
 
 ---
 

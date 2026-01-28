@@ -8,24 +8,24 @@
 Start here to understand how to use the system:
 1. **[README.md](../README.md)** - Project overview and key features
 2. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - How to request JIT access
-3. **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - Visual system architecture
+3. **[ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)** - Visual system architecture
 
 #### 🏗️ DevOps & Infrastructure Engineers
 Deploy and maintain the infrastructure:
-1. **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-step deployment
-2. **[COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)** - Technical details
-3. **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - System design
+1. **[DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)** - Step-by-step deployment
+2. **[COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)** - Technical details
+3. **[ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)** - System design
 
 #### 🔐 Security & Compliance
 Understand security model and compliance:
-1. **[COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)** - Security architecture
-2. **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - Zero Trust implementation
-3. **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - What was built
+1. **[COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)** - Security architecture
+2. **[ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)** - Zero Trust implementation
+3. **[IMPLEMENTATION_SUMMARY.md](implementation/IMPLEMENTATION_SUMMARY.md)** - What was built
 
 #### 👨‍💼 Decision Makers & Managers
 Understand business value and costs:
-1. **[README_COMPLIANCE.md](README_COMPLIANCE.md)** - Executive summary
-2. **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - What was delivered
+1. **[README.md](../README.md)** - Executive summary
+2. **[IMPLEMENTATION_SUMMARY.md](implementation/IMPLEMENTATION_SUMMARY.md)** - What was delivered
 
 ---
 
@@ -59,7 +59,7 @@ Understand business value and costs:
 
 ---
 
-### 3. **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - System Architecture
+### 3. **[ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)** - System Architecture
 **Purpose**: Visual and detailed architecture
 **Audience**: Technical stakeholders
 **Contents**:
@@ -73,7 +73,7 @@ Understand business value and costs:
 
 ---
 
-### 4. **[COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)** - Implementation Details
+### 4. **[COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)** - Implementation Details
 **Purpose**: Deep dive into the implementation
 **Audience**: DevOps, architects, security teams
 **Contents**:
@@ -90,7 +90,7 @@ Understand business value and costs:
 
 ---
 
-### 5. **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-Step Deployment
+### 5. **[DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)** - Step-by-Step Deployment
 **Purpose**: Hands-on deployment instructions
 **Audience**: DevOps engineers
 **Contents**:
@@ -108,7 +108,7 @@ Understand business value and costs:
 
 ---
 
-### 6. **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - What Was Built
+### 6. **[IMPLEMENTATION_SUMMARY.md](implementation/IMPLEMENTATION_SUMMARY.md)** - What Was Built
 **Purpose**: Summary of delivered features
 **Audience**: Project managers, decision makers
 **Contents**:
@@ -124,7 +124,7 @@ Understand business value and costs:
 
 ---
 
-### 7. **[README_COMPLIANCE.md](README_COMPLIANCE.md)** - Executive Summary
+### 7. **[README.md](../README.md)** - Executive Summary
 **Purpose**: Business-focused overview
 **Audience**: Decision makers, management
 **Contents**:
@@ -145,7 +145,7 @@ Understand business value and costs:
 ### Scenario 1: "I need to access the database for 1 hour"
 **Read**:
 1. [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Get the curl command
-2. [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md) - Understand the workflow
+2. [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md) - Understand the workflow
 
 **Time**: 5 minutes
 
@@ -153,9 +153,9 @@ Understand business value and costs:
 
 ### Scenario 2: "I need to deploy this to Azure"
 **Read**:
-1. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Follow step-by-step
-2. [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md) - Understand components
-3. [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md) - Verify architecture
+1. [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md) - Follow step-by-step
+2. [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md) - Understand components
+3. [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md) - Verify architecture
 
 **Time**: 30 minutes + deployment time
 
@@ -163,9 +163,9 @@ Understand business value and costs:
 
 ### Scenario 3: "I need to understand the security model"
 **Read**:
-1. [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md) - Zero Trust diagram
-2. [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md) - Security details
-3. [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Security improvements
+1. [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md) - Zero Trust diagram
+2. [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md) - Security details
+3. [IMPLEMENTATION_SUMMARY.md](implementation/IMPLEMENTATION_SUMMARY.md) - Security improvements
 
 **Time**: 20 minutes
 
@@ -174,8 +174,8 @@ Understand business value and costs:
 ### Scenario 4: "The JIT system isn't working"
 **Read**:
 1. [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Common issues
-2. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md#troubleshooting-deployment) - Troubleshooting
-3. [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md#troubleshooting) - Deep troubleshooting
+2. [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md#troubleshooting-deployment) - Troubleshooting
+3. [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md#troubleshooting) - Deep troubleshooting
 
 **Time**: 15-30 minutes
 
@@ -184,8 +184,8 @@ Understand business value and costs:
 ### Scenario 5: "I need to explain this to my manager"
 **Read**:
 1. [README_COMPLIANCE.md](README_COMPLIANCE.md) - Executive summary
-2. [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Features delivered
-3. [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md) - Visual overview
+2. [IMPLEMENTATION_SUMMARY.md](implementation/IMPLEMENTATION_SUMMARY.md) - Features delivered
+3. [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md) - Visual overview
 
 **Time**: 10 minutes
 
@@ -210,8 +210,8 @@ Understand business value and costs:
 
 ### Access Control
 - How to request JIT access: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
-- Firewall rule creation: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Automatic cleanup: [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
+- Firewall rule creation: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Automatic cleanup: [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)
 
 ### API Endpoints
 - RequestAccess endpoint: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
@@ -219,33 +219,33 @@ Understand business value and costs:
 - Response format: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
 
 ### Azure Resources
-- SQL Server: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Azure Function: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Storage Account: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Virtual Network: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
+- SQL Server: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Azure Function: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Storage Account: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Virtual Network: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
 
 ### Deployment
-- Prerequisites: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Terraform init: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Verification: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Troubleshooting: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- Prerequisites: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
+- Terraform init: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
+- Verification: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
+- Troubleshooting: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
 
 ### Security & Compliance
-- Zero Trust model: [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-- Encryption details: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Audit logging: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Compliance frameworks: [README_COMPLIANCE.md](README_COMPLIANCE.md)
+- Zero Trust model: [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)
+- Encryption details: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Audit logging: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Compliance frameworks: [README.md](../README.md)
 
 ### Monitoring & Observability
-- Application Insights: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Audit logs: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-- Alerts: [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
+- Application Insights: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Audit logs: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md)
+- Alerts: [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)
 
 ### Cost & Operations
-- Cost breakdown: [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-- Monthly expenses: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Cost optimization: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Maintenance tasks: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- Cost breakdown: [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md)
+- Monthly expenses: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
+- Cost optimization: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
+- Maintenance tasks: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
 
 ---
 
@@ -276,7 +276,7 @@ Understand business value and costs:
 
 ### Reference (As Needed)
 6. 📋 IMPLEMENTATION_SUMMARY.md - What was delivered?
-7. 📋 README_COMPLIANCE.md - Why should I deploy it?
+7. 📋 README.md - Why should I deploy it?
 
 ---
 
@@ -303,18 +303,18 @@ Understand business value and costs:
 
 ### Problem: System isn't working
 - See: [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Common issues
-- Then: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Troubleshooting
+- Then: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md) - Troubleshooting
 
 ### Problem: Deployment fails
-- See: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Troubleshooting
-- Then: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md) - Details
+- See: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md) - Troubleshooting
+- Then: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md) - Details
 
 ### Problem: Don't understand architecture
-- See: [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md) - Diagrams
-- Then: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md) - Details
+- See: [ARCHITECTURE_DIAGRAM.md](architecture/ARCHITECTURE_DIAGRAM.md) - Diagrams
+- Then: [COMPLIANCE_IMPLEMENTATION.md](implementation/COMPLIANCE_IMPLEMENTATION.md) - Details
 
 ### Problem: Can't deploy to Azure
-- See: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Step-by-step
+- See: [DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md) - Step-by-step
 - Then: Contact Azure support
 
 ---

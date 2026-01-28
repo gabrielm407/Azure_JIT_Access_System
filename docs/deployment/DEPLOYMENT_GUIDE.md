@@ -484,9 +484,9 @@ terraform output cost_breakdown
 
 ## Support & Next Steps
 
-1. **Review Architecture**: See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-2. **Understand Implementation**: See [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-3. **Quick Reference**: See [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+1. **Review Architecture**: See [ARCHITECTURE_DIAGRAM.md](../architecture/ARCHITECTURE_DIAGRAM.md)
+2. **Understand Implementation**: See [COMPLIANCE_IMPLEMENTATION.md](../implementation/COMPLIANCE_IMPLEMENTATION.md)
+3. **Quick Reference**: See [QUICK_REFERENCE.md](../QUICK_REFERENCE.md)
 4. **Troubleshooting**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md#troubleshooting-deployment)
 
 ---

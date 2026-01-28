@@ -387,36 +387,36 @@ Monthly Tasks:
 ## 🎓 Learning Resources
 
 ### Understanding JIT Access
-1. Learn what JIT is: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
-2. See how it works: [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-3. Understand implementation: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
+1. Learn what JIT is: [QUICK_REFERENCE.md](../QUICK_REFERENCE.md)
+2. See how it works: [ARCHITECTURE_DIAGRAM.md](../architecture/ARCHITECTURE_DIAGRAM.md)
+3. Understand implementation: [COMPLIANCE_IMPLEMENTATION.md](../implementation/COMPLIANCE_IMPLEMENTATION.md)
 
 ### Deploying to Azure
-1. Follow: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-2. Understand: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
-3. Reference: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+1. Follow: [DEPLOYMENT_GUIDE.md](../deployment/DEPLOYMENT_GUIDE.md)
+2. Understand: [COMPLIANCE_IMPLEMENTATION.md](../implementation/COMPLIANCE_IMPLEMENTATION.md)
+3. Reference: [QUICK_REFERENCE.md](../QUICK_REFERENCE.md)
 
 ### Troubleshooting
-1. Check: [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Common issues
-2. Then: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Detailed troubleshooting
-3. Deep dive: [COMPLIANCE_IMPLEMENTATION.md](COMPLIANCE_IMPLEMENTATION.md)
+1. Check: [QUICK_REFERENCE.md](../QUICK_REFERENCE.md) - Common issues
+2. Then: [DEPLOYMENT_GUIDE.md](../deployment/DEPLOYMENT_GUIDE.md) - Detailed troubleshooting
+3. Deep dive: [COMPLIANCE_IMPLEMENTATION.md](../implementation/COMPLIANCE_IMPLEMENTATION.md)
 
 ---
 
 ## 📞 Support & Next Steps
 
 ### What to Do Next
-1. ✅ Review [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-2. ✅ Follow [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-3. ✅ Test JIT access with [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+1. ✅ Review [ARCHITECTURE_DIAGRAM.md](../architecture/ARCHITECTURE_DIAGRAM.md)
+2. ✅ Follow [DEPLOYMENT_GUIDE.md](../deployment/DEPLOYMENT_GUIDE.md)
+3. ✅ Test JIT access with [QUICK_REFERENCE.md](../QUICK_REFERENCE.md)
 4. ✅ Set up monitoring in Azure Portal
 5. ✅ Configure email alerts
 6. ✅ Document internal access procedures
 
 ### Getting Help
-- **Architecture Questions**: See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)
-- **Deployment Help**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- **Quick Answers**: See [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+- **Architecture Questions**: See [ARCHITECTURE_DIAGRAM.md](../architecture/ARCHITECTURE_DIAGRAM.md)
+- **Deployment Help**: See [DEPLOYMENT_GUIDE.md](../deployment/DEPLOYMENT_GUIDE.md)
+- **Quick Answers**: See [QUICK_REFERENCE.md](../QUICK_REFERENCE.md)
 - **Troubleshooting**: Search documentation for your error
 
 ---
