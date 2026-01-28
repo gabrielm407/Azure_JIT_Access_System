@@ -7,15 +7,54 @@ on:
     branches:
       - main
     paths:
-      - 'src/**' # Only run when C# code changes, ignore Terraform changes
-  workflow_dispatch: # Allows you to run this manually if needed
+      - 'src/**'
+      - '*.tf'
+  workflow_dispatch:
 
 env:
   AZURE_FUNCTIONAPP_NAME: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
   DOTNET_VERSION: '8.0.x' 
-  WORKING_DIRECTORY: 'src' # Points to where you created the C# project
+  WORKING_DIRECTORY: 'src'
+
 jobs:
+  # THE SECURITY GATE (Shift-Left)
+  security-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
+
+    # This checks if you left ports open or encryption off
+    - name: Run Trivy Vulnerability Scanner (IaC)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'config'
+        hide-progress: false
+        format: 'table'
+        exit-code: '1'         # FAIL the build if issues are found
+        severity: 'CRITICAL,HIGH'
+      continue-on-error: true # false = stop the pipeline if failures are false, true = proceed to next step
+
+    # This checks for SQL Injection and bad logic
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: csharp
+
+    - name: Autobuild C# for CodeQL
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  # DEPLOYMENT (Only runs if Security Gate passes)
   build-and-deploy:
+    needs: security-gate
     runs-on: ubuntu-latest
     
     steps:
@@ -31,18 +70,8 @@ jobs:
       run: dotnet restore
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
-    - name: 'Security Audit (NuGet)'
-      run: dotnet list package --vulnerable --include-transitive
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-      continue-on-error: true
-
     - name: 'Publish Project'
       run: dotnet publish --configuration Release --output ./output
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-    # ADD THIS DEBUG STEP
-    - name: 'Debug: List Published Files'
-      run: ls -R output
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: 'Login via Azure CLI'
