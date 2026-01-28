@@ -1,6 +1,6 @@
 # ============================================================================ 
 # Azure SQL Server with Security and Encryption Configuration
-# ============================================================================
+# ============================================================================ 
 
 # Azure SQL Server with Public Network Access enabled
 resource "azurerm_mssql_server" "sql_server" {
