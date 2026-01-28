@@ -293,7 +293,7 @@ External User
 - [ ] Terraform knowledge (basic)
 
 ### To Deploy
-- [ ] Review [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- [ ] Review [DEPLOYMENT_GUIDE.md](docs/deployment/DEPLOYMENT_GUIDE.md)
 - [ ] Run `terraform init`
 - [ ] Run `terraform plan`
 - [ ] Run `terraform apply`
@@ -343,8 +343,8 @@ External User
 
 ### Immediate Actions
 1. ✅ Read this document (you're doing it!)
-2. ✅ Review [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
-3. ✅ Review [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+2. ✅ Review [QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)
+3. ✅ Review [DEPLOYMENT_GUIDE.md](docs/deployment/DEPLOYMENT_GUIDE.md)
 4. ✅ Schedule deployment
 
 ### Within This Week
@@ -392,5 +392,5 @@ This project delivers **enterprise-grade security** at **startup-friendly costs*
 
 ---
 
-**Questions?** See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for complete documentation.
+**Questions?** See [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) for complete documentation.
 
