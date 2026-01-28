@@ -105,7 +105,7 @@ site_config {
 
 ### ✅ Solution
 1.  **Clear Secrets:** Deleted the azure-webjobs-secrets container in the Storage Account and restarted the app to regenerate fresh keys.
-2.  **Observability:** Used KQL queries to verify the function was actually waking up:
+2.  **Observability:** Used KQL queries to verify the function was actually waking up on the logs of the Application Insights:
 
 ```hcl
 traces | where operation_Name == "CleanupRules"
