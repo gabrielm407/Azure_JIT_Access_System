@@ -36,7 +36,7 @@ resource "azurerm_storage_account" "sql_audit_storage" {
 # Blob container for SQL audit logs
 resource "azurerm_storage_container" "sql_audit_logs" {
   name                  = "sql-audit-logs"
-  storage_account_name  = azurerm_storage_account.sql_audit_storage.name
+  storage_account_id    = azurerm_storage_account.sql_audit_storage.name
   container_access_type = "private"
 
   depends_on = [azurerm_storage_account.sql_audit_storage]
@@ -45,7 +45,7 @@ resource "azurerm_storage_container" "sql_audit_logs" {
 # Blob container for vulnerability assessments
 resource "azurerm_storage_container" "vulnerability_assessments" {
   name                  = "vulnerability-assessments"
-  storage_account_name  = azurerm_storage_account.sql_audit_storage.name
+  storage_account_id    = azurerm_storage_account.sql_audit_storage.name
   container_access_type = "private"
 
   depends_on = [azurerm_storage_account.sql_audit_storage]

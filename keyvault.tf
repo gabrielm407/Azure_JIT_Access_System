@@ -2,6 +2,7 @@
 # Key Vault for Customer-Managed Keys (CMK) Encryption
 # ============================================================================
 
+# Key Vault Resource
 resource "azurerm_key_vault" "sql_cmk_vault" {
   name                = "sqlcmk${lower(replace(module.resource_group[local.default_environment].name, "-", ""))}"
   location            = module.resource_group[local.default_environment].location
@@ -50,10 +51,10 @@ resource "azurerm_private_endpoint" "keyvault_private_endpoint" {
 resource "azurerm_private_dns_zone" "keyvault_dns" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = module.resource_group[local.default_environment].name
-
-  tags = module.resource_group[local.default_environment].tags
+  tags                = module.resource_group[local.default_environment].tags
 }
 
+# Key Vault Private DNS Zone Virtual Network Link
 resource "azurerm_private_dns_zone_virtual_network_link" "keyvault_vnet_link" {
   name                  = "${azurerm_key_vault.sql_cmk_vault.name}-vnet-link"
   resource_group_name   = module.resource_group[local.default_environment].name
